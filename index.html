@@ -577,11 +577,11 @@ document.getElementById('form').addEventListener('submit', async function(e) {
     const sigX = nameCenterX - sigWidth / 2;
     doc.addImage(SIG_B64, 'PNG', sigX, 545.28, sigWidth, sigHeight);
 
-    line(nameX, 628.4, 12, false, nameText);
+    line(nameX, 601.8, 12, false, nameText);
 
     const cmtWidth = doc.getTextWidth(cmtText);
     const cmtX = nameCenterX - cmtWidth / 2;
-    line(cmtX, 651.1, 12, false, cmtText);
+    line(cmtX, 624.5, 12, false, cmtText);
 
     const fileName = `Relatorio_Ass_${idServico || 'servico'}.pdf`;
     const pdfBlob = doc.output('blob');
