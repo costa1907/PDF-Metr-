@@ -280,7 +280,7 @@
       </div>
     </fieldset>
 
-    <button type="submit">Gerar e baixar PDF</button>
+    <button type="submit">Gerar PDF</button>
     <p class="status" id="status" role="status" aria-live="polite"></p>
   </form>
 </div>
@@ -336,7 +336,7 @@ document.getElementById('data').addEventListener('change', updateAnoSuffix);
 document.getElementById('data').value = new Date().toISOString().slice(0,10);
 updateAnoSuffix();
 
-document.getElementById('form').addEventListener('submit', function(e) {
+document.getElementById('form').addEventListener('submit', async function(e) {
   e.preventDefault();
   const statusEl = document.getElementById('status');
   try {
@@ -397,8 +397,25 @@ document.getElementById('form').addEventListener('submit', function(e) {
     line(409.4, 651.1, 12, false, 'Cmt da DEJEM');
 
     const fileName = `Relatorio_Ass_${idServico || 'servico'}.pdf`;
-    doc.save(fileName);
-    statusEl.textContent = `PDF gerado: ${fileName}`;
+    const pdfBlob = doc.output('blob');
+    const pdfFile = new File([pdfBlob], fileName, { type: 'application/pdf' });
+
+    if (navigator.canShare && navigator.canShare({ files: [pdfFile] })) {
+      try {
+        await navigator.share({ files: [pdfFile], title: fileName });
+        statusEl.textContent = `PDF pronto: ${fileName}`;
+      } catch (shareErr) {
+        if (shareErr && shareErr.name === 'AbortError') {
+          statusEl.textContent = '';
+        } else {
+          doc.save(fileName);
+          statusEl.textContent = `PDF gerado: ${fileName}`;
+        }
+      }
+    } else {
+      doc.save(fileName);
+      statusEl.textContent = `PDF gerado: ${fileName}`;
+    }
   } catch (err) {
     statusEl.textContent = 'Não foi possível gerar o PDF. Confira os campos e tente novamente.';
     console.error(err);
