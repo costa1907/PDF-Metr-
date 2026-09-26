@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Gerador de Relatório DEJEM</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
 <style>
   :root {
     --paper: #f5f3ee;
@@ -195,6 +196,40 @@
     text-align: center;
     margin-top: -4px;
   }
+  .tabs {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-bottom: 22px;
+  }
+  .tab-btn {
+    appearance: none;
+    border: 1px solid var(--line);
+    background: var(--paper-dark);
+    color: var(--ink-soft);
+    font-family: Georgia, 'Times New Roman', serif;
+    font-size: 14px;
+    font-weight: 700;
+    padding: 11px 10px;
+    border-radius: 6px;
+    cursor: pointer;
+  }
+  .tab-btn.active {
+    background: var(--accent);
+    color: var(--white);
+    border-color: var(--accent);
+  }
+  .panel[hidden] { display: none; }
+  .file-input {
+    width: 100%;
+    padding: 9px 10px;
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    background: var(--white);
+    color: var(--ink);
+    font-family: Georgia, 'Times New Roman', serif;
+    font-size: 14px;
+  }
 </style>
 </head>
 <body>
@@ -205,6 +240,12 @@
     <p class="sub">Preencha o que muda a cada plantão. Data, telefone, sua assinatura e o restante do texto ficam fixos, exatamente como no modelo original.</p>
   </header>
 
+  <div class="tabs" role="tablist">
+    <button type="button" class="tab-btn active" id="tabRelatorioBtn" role="tab" aria-selected="true">Relatório DEJEM</button>
+    <button type="button" class="tab-btn" id="tabAssinarBtn" role="tab" aria-selected="false">Assinar Escala</button>
+  </div>
+
+  <div id="panel-relatorio" class="panel">
   <form id="form">
     <fieldset>
       <legend>Data e horário</legend>
@@ -283,6 +324,23 @@
     <button type="submit">Gerar PDF</button>
     <p class="status" id="status" role="status" aria-live="polite"></p>
   </form>
+  </div>
+
+  <div id="panel-assinar" class="panel" hidden>
+    <fieldset>
+      <legend>Escala para assinar</legend>
+      <div class="row">
+        <div>
+          <label for="escalaFile">Arquivo da escala (PDF)</label>
+          <input type="file" id="escalaFile" class="file-input" accept="application/pdf">
+        </div>
+      </div>
+      <p class="hint">Anexe o PDF da escala (Relatório de Presença de Escala) recebido. A assinatura e o nome são colocados automaticamente no local certo.</p>
+    </fieldset>
+
+    <button type="button" id="assinarBtn">Assinar</button>
+    <p class="status" id="statusAssinar" role="status" aria-live="polite"></p>
+  </div>
 </div>
 
 <script>
@@ -335,6 +393,118 @@ document.getElementById('data').addEventListener('change', updateAnoSuffix);
 // defaults matching a typical shift, editable
 document.getElementById('data').value = new Date().toISOString().slice(0,10);
 updateAnoSuffix();
+
+// --- Abas ---
+const tabRelatorioBtn = document.getElementById('tabRelatorioBtn');
+const tabAssinarBtn = document.getElementById('tabAssinarBtn');
+const panelRelatorio = document.getElementById('panel-relatorio');
+const panelAssinar = document.getElementById('panel-assinar');
+
+function showTab(target) {
+  const showRelatorio = target === 'relatorio';
+  panelRelatorio.hidden = !showRelatorio;
+  panelAssinar.hidden = showRelatorio;
+  tabRelatorioBtn.classList.toggle('active', showRelatorio);
+  tabAssinarBtn.classList.toggle('active', !showRelatorio);
+  tabRelatorioBtn.setAttribute('aria-selected', String(showRelatorio));
+  tabAssinarBtn.setAttribute('aria-selected', String(!showRelatorio));
+}
+tabRelatorioBtn.addEventListener('click', () => showTab('relatorio'));
+tabAssinarBtn.addEventListener('click', () => showTab('assinar'));
+
+// --- Assinar Escala ---
+function base64ToUint8Array(base64) {
+  const raw = base64.split(',')[1] || base64;
+  const binary = atob(raw);
+  const bytes = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+  return bytes;
+}
+
+async function shareOrDownload(bytes, fileName, statusEl) {
+  const blob = new Blob([bytes], { type: 'application/pdf' });
+  const file = new File([blob], fileName, { type: 'application/pdf' });
+  if (navigator.canShare && navigator.canShare({ files: [file] })) {
+    try {
+      await navigator.share({ files: [file] });
+      statusEl.textContent = `PDF pronto: ${fileName}`;
+      return;
+    } catch (shareErr) {
+      if (shareErr && shareErr.name === 'AbortError') {
+        statusEl.textContent = '';
+        return;
+      }
+    }
+  }
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = fileName;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  statusEl.textContent = `PDF gerado: ${fileName}`;
+}
+
+document.getElementById('assinarBtn').addEventListener('click', async function() {
+  const statusEl = document.getElementById('statusAssinar');
+  const fileInput = document.getElementById('escalaFile');
+  const file = fileInput.files[0];
+  if (!file) {
+    statusEl.textContent = 'Selecione o arquivo PDF da escala primeiro.';
+    return;
+  }
+  statusEl.textContent = 'Assinando...';
+  try {
+    const { PDFDocument, rgb, StandardFonts } = PDFLib;
+    const existingBytes = await file.arrayBuffer();
+    const pdfDoc = await PDFDocument.load(existingBytes);
+    const page = pdfDoc.getPages()[0];
+    const pageHeight = page.getHeight();
+
+    const sigBytes = base64ToUint8Array(SIG_B64);
+    const pngImage = await pdfDoc.embedPng(sigBytes);
+    const boldFont = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
+
+    // Área reservada para a assinatura no modelo (coordenadas a partir do topo)
+    const box = { x0: 586.84, top: 476.45, x1: 706.84, bottom: 536.45 };
+    const boxWidth = box.x1 - box.x0;
+    const boxHeight = box.bottom - box.top;
+    const scale = Math.min(boxWidth / pngImage.width, boxHeight / pngImage.height);
+    const drawWidth = pngImage.width * scale;
+    const drawHeight = pngImage.height * scale;
+    const offsetX = (boxWidth - drawWidth) / 2;
+    const offsetY = (boxHeight - drawHeight) / 2;
+    const imgTop = box.top + offsetY;
+    const imgBottomFromTop = imgTop + drawHeight;
+
+    page.drawImage(pngImage, {
+      x: box.x0 + offsetX,
+      y: pageHeight - imgBottomFromTop,
+      width: drawWidth,
+      height: drawHeight,
+    });
+
+    const textTop = 543.5;
+    const textSize = 10;
+    const textBaselineFromTop = textTop + textSize * 0.8;
+    page.drawText('CB PM 142113-1 THIAGO SILVA COSTA', {
+      x: 554.5,
+      y: pageHeight - textBaselineFromTop,
+      size: textSize,
+      font: boldFont,
+      color: rgb(0, 0, 0),
+    });
+
+    const pdfBytes = await pdfDoc.save();
+    const fileName = 'Parte_Ass_-_THIAGO_SILVA_COSTA.pdf';
+    await shareOrDownload(pdfBytes, fileName, statusEl);
+  } catch (err) {
+    statusEl.textContent = 'Não foi possível assinar. Confira se o PDF anexado é válido.';
+    console.error(err);
+  }
+});
 
 document.getElementById('form').addEventListener('submit', async function(e) {
   e.preventDefault();
