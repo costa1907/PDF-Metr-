@@ -10,6 +10,7 @@
   v1.4 — Assinatura e "Cmt da DEJEM" centralizados no nome; nome aproximado da assinatura no Relatório DEJEM
   v1.5 — Número da versão exibido no cabeçalho
   v1.6 — Botão "Buscar número na planilha": lança a linha na planilha Google (Apps Script) e preenche o número do relatório sozinho
+  v1.7 — Botão "Excluir esta linha": remove da planilha a linha do número que está no campo, com confirmação
 -->
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
@@ -260,6 +261,11 @@
   }
   .secondary-btn:hover { background: var(--paper-dark); }
   .secondary-btn:disabled { opacity: 0.6; cursor: default; }
+  .danger-btn {
+    border-color: #a23b2e;
+    color: #a23b2e;
+  }
+  .danger-btn:hover { background: rgba(162, 59, 46, 0.08); }
   .file-input {
     width: 100%;
     padding: 9px 10px;
@@ -275,7 +281,7 @@
 <body>
 <div class="wrap">
   <header>
-    <span class="version-tag">v1.6</span>
+    <span class="version-tag">v1.7</span>
     <p class="eyebrow">PMESP &middot; DEJEM &middot; RELATÓRIO DE SERVIÇO</p>
     <h1>Gerador de Relatório</h1>
     <p class="sub">Preencha o que muda a cada plantão. Data, telefone, sua assinatura e o restante do texto ficam fixos, exatamente como no modelo original.</p>
@@ -324,8 +330,11 @@
       </div>
       <div class="row" style="margin-top: 4px;">
         <div>
-          <button type="button" id="buscarNumeroBtn" class="secondary-btn">Buscar número na planilha</button>
-          <p class="hint">Preenche a Estação (abaixo) e o Número da ID acima, depois toque aqui para lançar a linha na planilha e trazer o número certo automaticamente.</p>
+          <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+            <button type="button" id="buscarNumeroBtn" class="secondary-btn">Buscar número na planilha</button>
+            <button type="button" id="excluirLinhaBtn" class="secondary-btn danger-btn">Excluir esta linha</button>
+          </div>
+          <p class="hint">Preenche a Estação (abaixo) e o Número da ID acima, depois toque em "Buscar número" para lançar a linha e trazer o número certo. Errou algo? Toque em "Excluir esta linha" para apagar da planilha o número que está no campo acima.</p>
           <p class="status" id="statusBusca" role="status" aria-live="polite"></p>
         </div>
       </div>
@@ -583,6 +592,40 @@ document.getElementById('buscarNumeroBtn').addEventListener('click', async funct
       statusBusca.textContent = `Número ${data.numero} lançado na planilha e preenchido.`;
     } else {
       statusBusca.textContent = data.error ? `Erro: ${data.error}` : 'Não foi possível obter o número.';
+    }
+  } catch (err) {
+    statusBusca.textContent = 'Não foi possível falar com a planilha agora. Tente novamente.';
+    console.error(err);
+  } finally {
+    btn.disabled = false;
+  }
+});
+
+document.getElementById('excluirLinhaBtn').addEventListener('click', async function() {
+  const statusBusca = document.getElementById('statusBusca');
+  const btn = this;
+  const numDocValue = document.getElementById('numDoc').value.trim();
+
+  if (!numDocValue) {
+    statusBusca.textContent = 'Não há número no campo "Número do relatório" para excluir.';
+    return;
+  }
+
+  const confirmar = confirm(`Excluir da planilha a linha do número ${numDocValue}? Essa ação não pode ser desfeita.`);
+  if (!confirmar) return;
+
+  btn.disabled = true;
+  statusBusca.textContent = 'Excluindo da planilha...';
+
+  try {
+    const url = `${APPS_SCRIPT_URL}?action=excluir&numero=${encodeURIComponent(numDocValue)}`;
+    const resp = await fetch(url);
+    const data = await resp.json();
+    if (data.sucesso) {
+      statusBusca.textContent = `Linha do número ${numDocValue} excluída da planilha.`;
+      document.getElementById('numDoc').value = '';
+    } else {
+      statusBusca.textContent = data.error ? `Erro: ${data.error}` : 'Não foi possível excluir.';
     }
   } catch (err) {
     statusBusca.textContent = 'Não foi possível falar com a planilha agora. Tente novamente.';
