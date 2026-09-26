@@ -12,6 +12,7 @@
   v1.6 — Botão "Buscar número na planilha": lança a linha na planilha Google (Apps Script) e preenche o número do relatório sozinho
   v1.7 — Botão "Excluir esta linha": remove da planilha a linha do número que está no campo, com confirmação
   v1.8 — Confirmação de exclusão com o mesmo visual do site (sem o alerta feio do navegador); exclusão mais rápida (busca só na coluna A)
+  v1.9 — Campo "Data do serviço" uniforme com os demais (altura, alinhamento); legenda "Local do serviço" (antes "Local e equipe"); ano do número do relatório editável manualmente
 -->
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
@@ -157,6 +158,19 @@
     background-size: 5px 5px, 5px 5px;
     background-repeat: no-repeat;
   }
+  input[type="date"], input[type="time"] {
+    appearance: none;
+    -webkit-appearance: none;
+    display: block;
+    box-sizing: border-box;
+    width: 100%;
+    height: 40px;
+    line-height: 20px;
+    text-align: left;
+  }
+  input[type="date"]::-webkit-date-and-time-value {
+    text-align: left;
+  }
   input:focus, select:focus {
     outline: 2px solid var(--accent-soft);
     outline-offset: 1px;
@@ -187,6 +201,21 @@
   }
   .prefix-field .mid-input {
     border-radius: 0;
+  }
+  .mini-year-input {
+    width: 2.4em;
+    border: none;
+    background: transparent;
+    color: var(--ink-soft);
+    font-family: Georgia, 'Times New Roman', serif;
+    font-size: 13px;
+    text-align: center;
+    padding: 0;
+  }
+  .mini-year-input:focus {
+    outline: 1px solid var(--accent-soft);
+    outline-offset: 1px;
+    border-radius: 3px;
   }
   button {
     appearance: none;
@@ -313,7 +342,7 @@
 <body>
 <div class="wrap">
   <header>
-    <span class="version-tag">v1.8</span>
+    <span class="version-tag">v1.9</span>
     <p class="eyebrow">PMESP &middot; DEJEM &middot; RELATÓRIO DE SERVIÇO</p>
     <h1>Gerador de Relatório</h1>
     <p class="sub">Preencha o que muda a cada plantão. Data, telefone, sua assinatura e o restante do texto ficam fixos, exatamente como no modelo original.</p>
@@ -351,9 +380,9 @@
           <div class="prefix-field">
             <span>CPAM1-</span>
             <input type="text" id="numDoc" class="mid-input" inputmode="numeric" placeholder="3206" required>
-            <span class="suffix">/301.1/&hairsp;<span id="anoSuffixLabel">26</span></span>
+            <span class="suffix">/301.1/&hairsp;<input type="text" id="anoSuffixInput" class="mini-year-input" inputmode="numeric" maxlength="2" value="26" aria-label="Ano (2 dígitos)"></span>
           </div>
-          <p class="hint">O ano final do número é preenchido automaticamente a partir da data acima.</p>
+          <p class="hint">O ano final do número é preenchido automaticamente a partir da data acima, mas pode ser editado direto ali (útil se virar o ano e você ainda precisar gerar um relatório do ano anterior).</p>
         </div>
         <div>
           <label for="idServico">Número da ID</label>
@@ -373,7 +402,7 @@
     </fieldset>
 
     <fieldset>
-      <legend>Local e equipe</legend>
+      <legend>Local do serviço</legend>
       <div class="row">
         <div>
           <label for="estacao">Estação do metrô</label>
@@ -481,10 +510,10 @@ function pad(n) { return String(n).padStart(2, '0'); }
 
 function updateAnoSuffix() {
   const dataVal = document.getElementById('data').value;
-  const label = document.getElementById('anoSuffixLabel');
+  const input = document.getElementById('anoSuffixInput');
   if (dataVal) {
     const year = dataVal.split('-')[0];
-    label.textContent = year.slice(-2);
+    input.value = year.slice(-2);
   }
 }
 document.getElementById('data').addEventListener('change', updateAnoSuffix);
@@ -719,7 +748,7 @@ document.getElementById('form').addEventListener('submit', async function(e) {
     const parceiroNome = document.getElementById('parceiroNome').value.trim();
     const parceiro = `${parceiroGraduacao} ${parceiroRE} ${parceiroNome}`;
 
-    const anoSuffix = dataVal.split('-')[0].slice(-2);
+    const anoSuffix = document.getElementById('anoSuffixInput').value.trim();
     const dataFormatada = formatDate(dataVal);
     const [hiH, hiM] = horaInicio.split(':');
     const [hfH, hfM] = horaFim.split(':');
