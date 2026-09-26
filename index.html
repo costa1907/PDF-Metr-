@@ -402,7 +402,7 @@ document.getElementById('form').addEventListener('submit', async function(e) {
 
     if (navigator.canShare && navigator.canShare({ files: [pdfFile] })) {
       try {
-        await navigator.share({ files: [pdfFile], title: fileName });
+        await navigator.share({ files: [pdfFile] });
         statusEl.textContent = `PDF pronto: ${fileName}`;
       } catch (shareErr) {
         if (shareErr && shareErr.name === 'AbortError') {
