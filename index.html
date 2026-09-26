@@ -13,6 +13,7 @@
   v1.7 — Botão "Excluir esta linha": remove da planilha a linha do número que está no campo, com confirmação
   v1.8 — Confirmação de exclusão com o mesmo visual do site (sem o alerta feio do navegador); exclusão mais rápida (busca só na coluna A)
   v1.9 — Campo "Data do serviço" uniforme com os demais (altura, alinhamento); legenda "Local do serviço" (antes "Local e equipe"); ano do número do relatório editável manualmente
+  v1.10 — Correção visual do campo do ano (estava com caixa própria por causa de uma regra de CSS mais forte; agora fica solto dentro do sufixo "/301.1/")
 -->
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
@@ -202,8 +203,9 @@
   .prefix-field .mid-input {
     border-radius: 0;
   }
-  .mini-year-input {
-    width: 2.4em;
+  #anoSuffixInput {
+    width: 2.2em;
+    min-width: 0;
     border: none;
     background: transparent;
     color: var(--ink-soft);
@@ -211,11 +213,14 @@
     font-size: 13px;
     text-align: center;
     padding: 0;
+    height: auto;
+    line-height: normal;
+    border-radius: 0;
   }
-  .mini-year-input:focus {
-    outline: 1px solid var(--accent-soft);
-    outline-offset: 1px;
-    border-radius: 3px;
+  #anoSuffixInput:focus {
+    outline: none;
+    color: var(--ink);
+    border-bottom: 1px solid var(--accent-soft);
   }
   button {
     appearance: none;
@@ -342,7 +347,7 @@
 <body>
 <div class="wrap">
   <header>
-    <span class="version-tag">v1.9</span>
+    <span class="version-tag">v1.10</span>
     <p class="eyebrow">PMESP &middot; DEJEM &middot; RELATÓRIO DE SERVIÇO</p>
     <h1>Gerador de Relatório</h1>
     <p class="sub">Preencha o que muda a cada plantão. Data, telefone, sua assinatura e o restante do texto ficam fixos, exatamente como no modelo original.</p>
