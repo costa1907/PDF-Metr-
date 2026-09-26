@@ -11,6 +11,7 @@
   v1.5 — Número da versão exibido no cabeçalho
   v1.6 — Botão "Buscar número na planilha": lança a linha na planilha Google (Apps Script) e preenche o número do relatório sozinho
   v1.7 — Botão "Excluir esta linha": remove da planilha a linha do número que está no campo, com confirmação
+  v1.8 — Confirmação de exclusão com o mesmo visual do site (sem o alerta feio do navegador); exclusão mais rápida (busca só na coluna A)
 -->
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
@@ -266,6 +267,37 @@
     color: #a23b2e;
   }
   .danger-btn:hover { background: rgba(162, 59, 46, 0.08); }
+  .confirm-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    z-index: 50;
+  }
+  .confirm-overlay[hidden] { display: none; }
+  .confirm-box {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 22px;
+    max-width: 360px;
+    width: 100%;
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.3);
+  }
+  .confirm-message {
+    font-size: 15px;
+    color: var(--ink);
+    line-height: 1.5;
+    margin: 0 0 18px;
+  }
+  .confirm-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+  }
   .file-input {
     width: 100%;
     padding: 9px 10px;
@@ -281,7 +313,7 @@
 <body>
 <div class="wrap">
   <header>
-    <span class="version-tag">v1.7</span>
+    <span class="version-tag">v1.8</span>
     <p class="eyebrow">PMESP &middot; DEJEM &middot; RELATÓRIO DE SERVIÇO</p>
     <h1>Gerador de Relatório</h1>
     <p class="sub">Preencha o que muda a cada plantão. Data, telefone, sua assinatura e o restante do texto ficam fixos, exatamente como no modelo original.</p>
@@ -397,6 +429,16 @@
 
     <button type="button" id="assinarBtn">Assinar</button>
     <p class="status" id="statusAssinar" role="status" aria-live="polite"></p>
+  </div>
+</div>
+
+<div id="confirmOverlay" class="confirm-overlay" hidden>
+  <div class="confirm-box" role="alertdialog" aria-modal="true" aria-labelledby="confirmMessage">
+    <p id="confirmMessage" class="confirm-message"></p>
+    <div class="confirm-actions">
+      <button type="button" id="confirmCancelBtn" class="secondary-btn">Cancelar</button>
+      <button type="button" id="confirmOkBtn" class="secondary-btn danger-btn">Excluir</button>
+    </div>
   </div>
 </div>
 
@@ -601,6 +643,31 @@ document.getElementById('buscarNumeroBtn').addEventListener('click', async funct
   }
 });
 
+// --- Confirmação customizada (substitui o confirm() nativo) ---
+function confirmarCustom(mensagem) {
+  return new Promise((resolve) => {
+    const overlay = document.getElementById('confirmOverlay');
+    const msgEl = document.getElementById('confirmMessage');
+    const okBtn = document.getElementById('confirmOkBtn');
+    const cancelBtn = document.getElementById('confirmCancelBtn');
+
+    msgEl.textContent = mensagem;
+    overlay.hidden = false;
+
+    function limpar(resultado) {
+      overlay.hidden = true;
+      okBtn.removeEventListener('click', onOk);
+      cancelBtn.removeEventListener('click', onCancel);
+      resolve(resultado);
+    }
+    function onOk() { limpar(true); }
+    function onCancel() { limpar(false); }
+
+    okBtn.addEventListener('click', onOk);
+    cancelBtn.addEventListener('click', onCancel);
+  });
+}
+
 document.getElementById('excluirLinhaBtn').addEventListener('click', async function() {
   const statusBusca = document.getElementById('statusBusca');
   const btn = this;
@@ -611,7 +678,7 @@ document.getElementById('excluirLinhaBtn').addEventListener('click', async funct
     return;
   }
 
-  const confirmar = confirm(`Excluir da planilha a linha do número ${numDocValue}? Essa ação não pode ser desfeita.`);
+  const confirmar = await confirmarCustom(`Excluir da planilha a linha do número ${numDocValue}? Essa ação não pode ser desfeita.`);
   if (!confirmar) return;
 
   btn.disabled = true;
