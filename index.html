@@ -1,6 +1,15 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
+<!--
+  Histórico de versões
+  v1.0 — Gerador de Relatório DEJEM (data, turno fixo 07-15/15-23, número do relatório, estação em lista, parceiro por graduação/RE/nome)
+  v1.1 — Aba "Assinar Escala": anexa PDF da escala e aplica assinatura + nome (sem "Cmt da DEJEM") no local do modelo
+  v1.2 — Compartilhamento direto (Web Share API) com nome de arquivo correto, sem link blob: solto
+  v1.3 — Assinatura da escala no mesmo tamanho da assinatura do Relatório DEJEM; espaçamento do botão Assinar
+  v1.4 — Assinatura e "Cmt da DEJEM" centralizados no nome; nome aproximado da assinatura no Relatório DEJEM
+  v1.5 — Número da versão exibido no cabeçalho
+-->
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Gerador de Relatório DEJEM</title>
@@ -64,6 +73,18 @@
     margin-bottom: 28px;
     border-bottom: 2px solid var(--accent);
     padding-bottom: 16px;
+    position: relative;
+  }
+  .version-tag {
+    position: absolute;
+    top: 0;
+    right: 0;
+    font-family: 'Courier New', monospace;
+    font-size: 11px;
+    color: var(--ink-soft);
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    padding: 2px 6px;
   }
   .eyebrow {
     font-family: 'Courier New', monospace;
@@ -239,6 +260,7 @@
 <body>
 <div class="wrap">
   <header>
+    <span class="version-tag">v1.5</span>
     <p class="eyebrow">PMESP &middot; DEJEM &middot; RELATÓRIO DE SERVIÇO</p>
     <h1>Gerador de Relatório</h1>
     <p class="sub">Preencha o que muda a cada plantão. Data, telefone, sua assinatura e o restante do texto ficam fixos, exatamente como no modelo original.</p>
