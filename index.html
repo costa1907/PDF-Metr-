@@ -251,9 +251,31 @@
             <option value="" disabled selected>Selecione</option>
           </select>
         </div>
+      </div>
+    </fieldset>
+
+    <fieldset>
+      <legend>Parceiro de serviço</legend>
+      <div class="row">
         <div>
-          <label for="parceiro">Parceiro de serviço (posto/graduação, RE e nome)</label>
-          <input type="text" id="parceiro" placeholder="Sd PM 251402-8 Vinícius" required>
+          <label for="parceiroGraduacao">Graduação</label>
+          <select id="parceiroGraduacao" required>
+            <option value="Sd PM">Sd PM</option>
+            <option value="Cb PM">Cb PM</option>
+            <option value="3º Sgt PM">3º Sgt PM</option>
+            <option value="2º Sgt PM">2º Sgt PM</option>
+            <option value="1º Sgt PM">1º Sgt PM</option>
+          </select>
+        </div>
+        <div class="row two">
+          <div>
+            <label for="parceiroRE">RE</label>
+            <input type="text" id="parceiroRE" inputmode="numeric" placeholder="251402-8" required>
+          </div>
+          <div>
+            <label for="parceiroNome">Nome</label>
+            <input type="text" id="parceiroNome" placeholder="Vinícius" required>
+          </div>
         </div>
       </div>
     </fieldset>
@@ -326,7 +348,10 @@ document.getElementById('form').addEventListener('submit', function(e) {
     const estacaoObj = STATIONS.find(s => s.name === estacaoValue) || { name: estacaoValue, title: estacaoValue };
     const estacao = estacaoObj.name;
     const estacaoTitle = estacaoObj.title;
-    const parceiro = document.getElementById('parceiro').value.trim();
+    const parceiroGraduacao = document.getElementById('parceiroGraduacao').value;
+    const parceiroRE = document.getElementById('parceiroRE').value.trim();
+    const parceiroNome = document.getElementById('parceiroNome').value.trim();
+    const parceiro = `${parceiroGraduacao} ${parceiroRE} ${parceiroNome}`;
 
     const anoSuffix = dataVal.split('-')[0].slice(-2);
     const dataFormatada = formatDate(dataVal);
