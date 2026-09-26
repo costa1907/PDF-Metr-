@@ -9,6 +9,7 @@
   v1.3 — Assinatura da escala no mesmo tamanho da assinatura do Relatório DEJEM; espaçamento do botão Assinar
   v1.4 — Assinatura e "Cmt da DEJEM" centralizados no nome; nome aproximado da assinatura no Relatório DEJEM
   v1.5 — Número da versão exibido no cabeçalho
+  v1.6 — Botão "Buscar número na planilha": lança a linha na planilha Google (Apps Script) e preenche o número do relatório sozinho
 -->
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
@@ -245,6 +246,20 @@
     gap: 18px;
   }
   .panel[hidden] { display: none; }
+  .secondary-btn {
+    appearance: none;
+    border: 1px solid var(--accent);
+    background: transparent;
+    color: var(--accent);
+    font-family: Georgia, 'Times New Roman', serif;
+    font-size: 14px;
+    font-weight: 700;
+    padding: 10px 14px;
+    border-radius: 6px;
+    cursor: pointer;
+  }
+  .secondary-btn:hover { background: var(--paper-dark); }
+  .secondary-btn:disabled { opacity: 0.6; cursor: default; }
   .file-input {
     width: 100%;
     padding: 9px 10px;
@@ -260,7 +275,7 @@
 <body>
 <div class="wrap">
   <header>
-    <span class="version-tag">v1.5</span>
+    <span class="version-tag">v1.6</span>
     <p class="eyebrow">PMESP &middot; DEJEM &middot; RELATÓRIO DE SERVIÇO</p>
     <h1>Gerador de Relatório</h1>
     <p class="sub">Preencha o que muda a cada plantão. Data, telefone, sua assinatura e o restante do texto ficam fixos, exatamente como no modelo original.</p>
@@ -305,6 +320,13 @@
         <div>
           <label for="idServico">Número da ID</label>
           <input type="text" id="idServico" inputmode="numeric" placeholder="8800854" required>
+        </div>
+      </div>
+      <div class="row" style="margin-top: 4px;">
+        <div>
+          <button type="button" id="buscarNumeroBtn" class="secondary-btn">Buscar número na planilha</button>
+          <p class="hint">Preenche a Estação (abaixo) e o Número da ID acima, depois toque aqui para lançar a linha na planilha e trazer o número certo automaticamente.</p>
+          <p class="status" id="statusBusca" role="status" aria-live="polite"></p>
         </div>
       </div>
     </fieldset>
@@ -528,6 +550,45 @@ document.getElementById('assinarBtn').addEventListener('click', async function()
   } catch (err) {
     statusEl.textContent = 'Não foi possível assinar. Confira se o PDF anexado é válido.';
     console.error(err);
+  }
+});
+
+// --- Buscar número do documento na planilha ---
+const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzkOFUTbK8PoJLDpwQm4j7sTEX8zb0_rft6Z9Z97-iyD03GafyfyCTls_K0OC6sGsc/exec';
+
+document.getElementById('buscarNumeroBtn').addEventListener('click', async function() {
+  const statusBusca = document.getElementById('statusBusca');
+  const btn = this;
+  const estacaoValue = document.getElementById('estacao').value;
+  const idServicoValue = document.getElementById('idServico').value.trim();
+
+  if (!estacaoValue) {
+    statusBusca.textContent = 'Selecione a estação (abaixo) antes de buscar.';
+    return;
+  }
+  if (!idServicoValue) {
+    statusBusca.textContent = 'Preencha o Número da ID antes de buscar.';
+    return;
+  }
+
+  btn.disabled = true;
+  statusBusca.textContent = 'Lançando na planilha...';
+
+  try {
+    const url = `${APPS_SCRIPT_URL}?estacao=${encodeURIComponent('METRÔ ' + estacaoValue)}&id=${encodeURIComponent(idServicoValue)}`;
+    const resp = await fetch(url);
+    const data = await resp.json();
+    if (data.numero) {
+      document.getElementById('numDoc').value = data.numero;
+      statusBusca.textContent = `Número ${data.numero} lançado na planilha e preenchido.`;
+    } else {
+      statusBusca.textContent = data.error ? `Erro: ${data.error}` : 'Não foi possível obter o número.';
+    }
+  } catch (err) {
+    statusBusca.textContent = 'Não foi possível falar com a planilha agora. Tente novamente.';
+    console.error(err);
+  } finally {
+    btn.disabled = false;
   }
 });
 
