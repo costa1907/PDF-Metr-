@@ -16,6 +16,7 @@
   v1.10 — Correção visual do campo do ano (estava com caixa própria por causa de uma regra de CSS mais forte; agora fica solto dentro do sufixo "/301.1/")
   v1.11 — Ícone personalizado (a própria assinatura) para o atalho na tela inicial; confirmação com resumo dos dados antes de gerar o Relatório DEJEM e antes de assinar a escala
   v1.12 — Ícone do atalho corrigido: precisa ser um arquivo próprio (apple-touch-icon.png) ao lado do index.html no GitHub, o iOS não aceita ícone embutido no código para "Adicionar à Tela de Início"
+  v1.13 — Paleta escura com verde neon (inspirada no MestreOrça AI), sempre ativa
 -->
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
@@ -28,36 +29,36 @@
 <script src="https://cdn.jsdelivr.net/npm/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
 <style>
   :root {
-    --paper: #f5f3ee;
-    --paper-dark: #eae6db;
-    --ink: #1c2b1f;
-    --ink-soft: #4a5850;
-    --line: #cfc9b8;
-    --accent: #29463b;
-    --accent-soft: #3f6455;
-    --white: #ffffff;
+    --paper: #0d0f11;
+    --paper-dark: #15181b;
+    --ink: #f2f4f3;
+    --ink-soft: #8b959c;
+    --line: #2a2f33;
+    --accent: #22e6a0;
+    --accent-soft: #1abf85;
+    --white: #1b1f22;
   }
   @media (prefers-color-scheme: dark) {
     :root:not([data-theme="light"]) {
-      --paper: #141814;
-      --paper-dark: #1b201a;
-      --ink: #e9e6dc;
-      --ink-soft: #a9b0a5;
-      --line: #35392f;
-      --accent: #7fae98;
-      --accent-soft: #5c8871;
-      --white: #1f241d;
+      --paper: #0d0f11;
+      --paper-dark: #15181b;
+      --ink: #f2f4f3;
+      --ink-soft: #8b959c;
+      --line: #2a2f33;
+      --accent: #22e6a0;
+      --accent-soft: #1abf85;
+      --white: #1b1f22;
     }
   }
   :root[data-theme="dark"] {
-    --paper: #14181d;
-    --paper-dark: #1b201a;
-    --ink: #e9e6dc;
-    --ink-soft: #a9b0a5;
-    --line: #35392f;
-    --accent: #7fae98;
-    --accent-soft: #5c8871;
-    --white: #1f241d;
+    --paper: #0d0f11;
+    --paper-dark: #15181b;
+    --ink: #f2f4f3;
+    --ink-soft: #8b959c;
+    --line: #2a2f33;
+    --accent: #22e6a0;
+    --accent-soft: #1abf85;
+    --white: #1b1f22;
   }
   * { box-sizing: border-box; }
   html, body {
@@ -303,10 +304,10 @@
   .secondary-btn:hover { background: var(--paper-dark); }
   .secondary-btn:disabled { opacity: 0.6; cursor: default; }
   .danger-btn {
-    border-color: #a23b2e;
-    color: #a23b2e;
+    border-color: #ff6b5b;
+    color: #ff6b5b;
   }
-  .danger-btn:hover { background: rgba(162, 59, 46, 0.08); }
+  .danger-btn:hover { background: rgba(255, 107, 91, 0.1); }
   .confirm-overlay {
     position: fixed;
     inset: 0;
@@ -354,7 +355,7 @@
 <body>
 <div class="wrap">
   <header>
-    <span class="version-tag">v1.12</span>
+    <span class="version-tag">v1.13</span>
     <p class="eyebrow">PMESP &middot; DEJEM &middot; RELATÓRIO DE SERVIÇO</p>
     <h1>Gerador de Relatório</h1>
     <p class="sub">Preencha o que muda a cada plantão. Data, telefone, sua assinatura e o restante do texto ficam fixos, exatamente como no modelo original.</p>
