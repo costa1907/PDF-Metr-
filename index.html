@@ -31,6 +31,7 @@
   v1.25 — Botão "Planilha oficial" navega na mesma janela em vez de abrir em nova aba, tentando evitar a confirmação "Abrir Link?" do iOS no modo tela cheia
   v1.26 — Indicador de carregamento (spinner) durante Buscar número/Excluir/Assinar; botões "Gerar PDF" e "Assinar" travados durante o processamento pra evitar clique duplo
   v1.27 — Corrigido bug sério: a atualização automática podia recarregar a página no meio de um "Buscar número"/"Excluir" em andamento, fazendo o pedido antigo terminar sozinho no fundo e duplicar ao tentar de novo. Agora o site nunca se atualiza sozinho enquanto uma operação da planilha está rodando. Os três botões da planilha também ficam travados juntos, e o aviso de carregamento agora avisa pra não fechar/trocar de app enquanto processa
+  v1.28 — Contador de segundos ao vivo embaixo do spinner durante "Buscar número"/"Excluir", e o resultado final mostra quanto tempo levou
 -->
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
@@ -285,6 +286,13 @@
   @keyframes spin {
     to { transform: rotate(360deg); }
   }
+  .contador-segundos {
+    display: inline-block;
+    margin-top: 4px;
+    font-family: 'Courier New', monospace;
+    font-size: 12px;
+    color: var(--ink-soft);
+  }
   .preview-note {
     font-size: 12px;
     color: var(--ink-soft);
@@ -414,7 +422,7 @@
 <body>
 <div class="wrap">
   <header>
-    <span class="version-tag">v1.27</span>
+    <span class="version-tag">v1.28</span>
     <p class="eyebrow">PMESP &middot; DEJEM &middot; RELATÓRIO DE SERVIÇO</p>
     <h1>Gerador de Relatório</h1>
     <p class="sub">Preencha o que muda a cada plantão. Data, telefone, sua assinatura e o restante do texto ficam fixos, exatamente como no modelo original.</p>
@@ -756,6 +764,20 @@ function setLoading(el, texto) {
   el.innerHTML = `<span class="spinner"></span>${texto}`;
 }
 
+function iniciarContador(el, texto) {
+  const inicio = Date.now();
+  el.innerHTML = `<span class="spinner"></span>${texto}<br><span class="contador-segundos">0s</span>`;
+  const contadorEl = el.querySelector('.contador-segundos');
+  const intervalId = setInterval(() => {
+    const seg = Math.floor((Date.now() - inicio) / 1000);
+    if (contadorEl.isConnected) contadorEl.textContent = `${seg}s`;
+  }, 1000);
+  return function pararContador() {
+    clearInterval(intervalId);
+    return Math.floor((Date.now() - inicio) / 1000);
+  };
+}
+
 function setPlanilhaBotoesDisabled(desabilitado) {
   ['buscarNumeroBtn', 'excluirLinhaBtn', 'abrirPlanilhaBtn'].forEach(id => {
     const el = document.getElementById(id);
@@ -798,23 +820,25 @@ document.getElementById('buscarNumeroBtn').addEventListener('click', async funct
 
   operacaoEmAndamento = true;
   setPlanilhaBotoesDisabled(true);
-  setLoading(statusBusca, 'Lançando na planilha... (pode levar até 20s, não feche nem troque de app)');
+  const pararContador = iniciarContador(statusBusca, 'Lançando na planilha... não feche nem troque de app');
 
   try {
     const url = `${APPS_SCRIPT_URL}?estacao=${encodeURIComponent('METRÔ ' + estacaoValue)}&id=${encodeURIComponent(idServicoValue)}&reqId=${encodeURIComponent(gerarReqId())}`;
     const resp = await fetch(url);
+    const segundos = pararContador();
     if (!resp.ok) {
-      statusBusca.textContent = `A planilha respondeu com erro (HTTP ${resp.status}). Tente novamente.`;
+      statusBusca.textContent = `A planilha respondeu com erro (HTTP ${resp.status}) após ${segundos}s. Tente novamente.`;
       return;
     }
     const data = await resp.json();
     if (data.numero) {
       document.getElementById('numDoc').value = data.numero;
-      statusBusca.textContent = `Número ${data.numero} lançado na planilha e preenchido.`;
+      statusBusca.textContent = `Número ${data.numero} lançado na planilha e preenchido (levou ${segundos}s).`;
     } else {
-      statusBusca.textContent = data.error ? `Erro da planilha: ${data.error}` : 'Não foi possível obter o número.';
+      statusBusca.textContent = (data.error ? `Erro da planilha: ${data.error}` : 'Não foi possível obter o número.') + ` (${segundos}s)`;
     }
   } catch (err) {
+    pararContador();
     statusBusca.textContent = mensagemErroPlanilha(err);
     console.error(err);
   } finally {
@@ -872,23 +896,25 @@ document.getElementById('excluirLinhaBtn').addEventListener('click', async funct
 
   operacaoEmAndamento = true;
   setPlanilhaBotoesDisabled(true);
-  setLoading(statusBusca, 'Excluindo da planilha... (pode levar até 20s, não feche nem troque de app)');
+  const pararContador = iniciarContador(statusBusca, 'Excluindo da planilha... não feche nem troque de app');
 
   try {
     const url = `${APPS_SCRIPT_URL}?action=excluir&numero=${encodeURIComponent(numDocValue)}&reqId=${encodeURIComponent(gerarReqId())}`;
     const resp = await fetch(url);
+    const segundos = pararContador();
     if (!resp.ok) {
-      statusBusca.textContent = `A planilha respondeu com erro (HTTP ${resp.status}). Tente novamente.`;
+      statusBusca.textContent = `A planilha respondeu com erro (HTTP ${resp.status}) após ${segundos}s. Tente novamente.`;
       return;
     }
     const data = await resp.json();
     if (data.sucesso) {
-      statusBusca.textContent = `Linha do número ${numDocValue} excluída da planilha.`;
+      statusBusca.textContent = `Linha do número ${numDocValue} excluída da planilha (levou ${segundos}s).`;
       document.getElementById('numDoc').value = '';
     } else {
-      statusBusca.textContent = data.error ? `Erro da planilha: ${data.error}` : 'Não foi possível excluir.';
+      statusBusca.textContent = (data.error ? `Erro da planilha: ${data.error}` : 'Não foi possível excluir.') + ` (${segundos}s)`;
     }
   } catch (err) {
+    pararContador();
     statusBusca.textContent = mensagemErroPlanilha(err);
     console.error(err);
   } finally {
@@ -1029,7 +1055,7 @@ resetFormState();
 // (o iPhone mantém o atalho da tela inicial "suspenso" em vez de recarregar sozinho,
 // então esse é o jeito de avisar que uma atualização está disponível sem precisar
 // remover e adicionar o atalho de novo)
-const CURRENT_VERSION = 'v1.27';
+const CURRENT_VERSION = 'v1.28';
 let operacaoEmAndamento = false;
 
 async function checkForUpdate() {
