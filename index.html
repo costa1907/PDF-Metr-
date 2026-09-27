@@ -30,6 +30,7 @@
   v1.24 — Removida a linha divisória; os três botões da planilha com a mesma altura e tamanho de texto, sem quebrar linha ("Abrir planilha oficial" virou "Planilha oficial")
   v1.25 — Botão "Planilha oficial" navega na mesma janela em vez de abrir em nova aba, tentando evitar a confirmação "Abrir Link?" do iOS no modo tela cheia
   v1.26 — Indicador de carregamento (spinner) durante Buscar número/Excluir/Assinar; botões "Gerar PDF" e "Assinar" travados durante o processamento pra evitar clique duplo
+  v1.27 — Corrigido bug sério: a atualização automática podia recarregar a página no meio de um "Buscar número"/"Excluir" em andamento, fazendo o pedido antigo terminar sozinho no fundo e duplicar ao tentar de novo. Agora o site nunca se atualiza sozinho enquanto uma operação da planilha está rodando. Os três botões da planilha também ficam travados juntos, e o aviso de carregamento agora avisa pra não fechar/trocar de app enquanto processa
 -->
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
@@ -413,7 +414,7 @@
 <body>
 <div class="wrap">
   <header>
-    <span class="version-tag">v1.26</span>
+    <span class="version-tag">v1.27</span>
     <p class="eyebrow">PMESP &middot; DEJEM &middot; RELATÓRIO DE SERVIÇO</p>
     <h1>Gerador de Relatório</h1>
     <p class="sub">Preencha o que muda a cada plantão. Data, telefone, sua assinatura e o restante do texto ficam fixos, exatamente como no modelo original.</p>
@@ -689,6 +690,7 @@ document.getElementById('assinarBtn').addEventListener('click', async function()
   }
 
   const assinarBtnEl = this;
+  operacaoEmAndamento = true;
   assinarBtnEl.disabled = true;
   setLoading(statusEl, 'Assinando...');
   try {
@@ -738,6 +740,7 @@ document.getElementById('assinarBtn').addEventListener('click', async function()
     statusEl.textContent = 'Não foi possível assinar. Confira se o PDF anexado é válido.';
     console.error(err);
   } finally {
+    operacaoEmAndamento = false;
     assinarBtnEl.disabled = false;
   }
 });
@@ -751,6 +754,13 @@ const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzkOFUTbK8PoJLD
 
 function setLoading(el, texto) {
   el.innerHTML = `<span class="spinner"></span>${texto}`;
+}
+
+function setPlanilhaBotoesDisabled(desabilitado) {
+  ['buscarNumeroBtn', 'excluirLinhaBtn', 'abrirPlanilhaBtn'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.disabled = desabilitado;
+  });
 }
 
 function gerarReqId() {
@@ -786,8 +796,9 @@ document.getElementById('buscarNumeroBtn').addEventListener('click', async funct
     return;
   }
 
-  btn.disabled = true;
-  setLoading(statusBusca, 'Lançando na planilha...');
+  operacaoEmAndamento = true;
+  setPlanilhaBotoesDisabled(true);
+  setLoading(statusBusca, 'Lançando na planilha... (pode levar até 20s, não feche nem troque de app)');
 
   try {
     const url = `${APPS_SCRIPT_URL}?estacao=${encodeURIComponent('METRÔ ' + estacaoValue)}&id=${encodeURIComponent(idServicoValue)}&reqId=${encodeURIComponent(gerarReqId())}`;
@@ -807,7 +818,8 @@ document.getElementById('buscarNumeroBtn').addEventListener('click', async funct
     statusBusca.textContent = mensagemErroPlanilha(err);
     console.error(err);
   } finally {
-    btn.disabled = false;
+    operacaoEmAndamento = false;
+    setPlanilhaBotoesDisabled(false);
   }
 });
 
@@ -858,8 +870,9 @@ document.getElementById('excluirLinhaBtn').addEventListener('click', async funct
   );
   if (!confirmar) return;
 
-  btn.disabled = true;
-  setLoading(statusBusca, 'Excluindo da planilha...');
+  operacaoEmAndamento = true;
+  setPlanilhaBotoesDisabled(true);
+  setLoading(statusBusca, 'Excluindo da planilha... (pode levar até 20s, não feche nem troque de app)');
 
   try {
     const url = `${APPS_SCRIPT_URL}?action=excluir&numero=${encodeURIComponent(numDocValue)}&reqId=${encodeURIComponent(gerarReqId())}`;
@@ -879,7 +892,8 @@ document.getElementById('excluirLinhaBtn').addEventListener('click', async funct
     statusBusca.textContent = mensagemErroPlanilha(err);
     console.error(err);
   } finally {
-    btn.disabled = false;
+    operacaoEmAndamento = false;
+    setPlanilhaBotoesDisabled(false);
   }
 });
 
@@ -887,6 +901,7 @@ document.getElementById('form').addEventListener('submit', async function(e) {
   e.preventDefault();
   const statusEl = document.getElementById('status');
   const gerarBtn = document.getElementById('gerarPdfBtn');
+  operacaoEmAndamento = true;
   gerarBtn.disabled = true;
   try {
     const dataVal = document.getElementById('data').value;
@@ -990,6 +1005,7 @@ document.getElementById('form').addEventListener('submit', async function(e) {
     statusEl.textContent = 'Não foi possível gerar o PDF. Confira os campos e tente novamente.';
     console.error(err);
   } finally {
+    operacaoEmAndamento = false;
     gerarBtn.disabled = false;
   }
 });
@@ -1013,9 +1029,11 @@ resetFormState();
 // (o iPhone mantém o atalho da tela inicial "suspenso" em vez de recarregar sozinho,
 // então esse é o jeito de avisar que uma atualização está disponível sem precisar
 // remover e adicionar o atalho de novo)
-const CURRENT_VERSION = 'v1.26';
+const CURRENT_VERSION = 'v1.27';
+let operacaoEmAndamento = false;
 
 async function checkForUpdate() {
+  if (operacaoEmAndamento) return; // nunca recarrega enquanto um pedido à planilha estiver em andamento
   try {
     const resp = await fetch(window.location.pathname + '?_cb=' + Date.now(), { cache: 'no-store' });
     if (!resp.ok) return;
