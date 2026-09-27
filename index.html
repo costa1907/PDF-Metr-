@@ -29,6 +29,7 @@
   v1.23 — Reorganizado o grupo de botões da planilha: "Buscar número" centralizado em destaque, "Excluir esta linha" e "Abrir planilha oficial" lado a lado abaixo, com respiro do campo ID acima
   v1.24 — Removida a linha divisória; os três botões da planilha com a mesma altura e tamanho de texto, sem quebrar linha ("Abrir planilha oficial" virou "Planilha oficial")
   v1.25 — Botão "Planilha oficial" navega na mesma janela em vez de abrir em nova aba, tentando evitar a confirmação "Abrir Link?" do iOS no modo tela cheia
+  v1.26 — Indicador de carregamento (spinner) durante Buscar número/Excluir/Assinar; botões "Gerar PDF" e "Assinar" travados durante o processamento pra evitar clique duplo
 -->
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
@@ -269,6 +270,20 @@
     color: var(--accent-soft);
     min-height: 18px;
   }
+  .spinner {
+    display: inline-block;
+    width: 13px;
+    height: 13px;
+    border: 2px solid var(--line);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+    vertical-align: middle;
+    margin-right: 7px;
+  }
+  @keyframes spin {
+    to { transform: rotate(360deg); }
+  }
   .preview-note {
     font-size: 12px;
     color: var(--ink-soft);
@@ -398,7 +413,7 @@
 <body>
 <div class="wrap">
   <header>
-    <span class="version-tag">v1.25</span>
+    <span class="version-tag">v1.26</span>
     <p class="eyebrow">PMESP &middot; DEJEM &middot; RELATÓRIO DE SERVIÇO</p>
     <h1>Gerador de Relatório</h1>
     <p class="sub">Preencha o que muda a cada plantão. Data, telefone, sua assinatura e o restante do texto ficam fixos, exatamente como no modelo original.</p>
@@ -494,7 +509,7 @@
       </div>
     </fieldset>
 
-    <button type="submit">Gerar PDF</button>
+    <button type="submit" id="gerarPdfBtn">Gerar PDF</button>
     <p class="status" id="status" role="status" aria-live="polite"></p>
   </form>
   </div>
@@ -673,7 +688,9 @@ document.getElementById('assinarBtn').addEventListener('click', async function()
     return;
   }
 
-  statusEl.textContent = 'Assinando...';
+  const assinarBtnEl = this;
+  assinarBtnEl.disabled = true;
+  setLoading(statusEl, 'Assinando...');
   try {
     const { PDFDocument, rgb, StandardFonts } = PDFLib;
     const existingBytes = await file.arrayBuffer();
@@ -720,6 +737,8 @@ document.getElementById('assinarBtn').addEventListener('click', async function()
   } catch (err) {
     statusEl.textContent = 'Não foi possível assinar. Confira se o PDF anexado é válido.';
     console.error(err);
+  } finally {
+    assinarBtnEl.disabled = false;
   }
 });
 
@@ -729,6 +748,10 @@ document.getElementById('abrirPlanilhaBtn').addEventListener('click', function()
 
 // --- Buscar número do documento na planilha ---
 const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzkOFUTbK8PoJLDpwQm4j7sTEX8zb0_rft6Z9Z97-iyD03GafyfyCTls_K0OC6sGsc/exec';
+
+function setLoading(el, texto) {
+  el.innerHTML = `<span class="spinner"></span>${texto}`;
+}
 
 function gerarReqId() {
   if (window.crypto && crypto.randomUUID) return crypto.randomUUID();
@@ -764,7 +787,7 @@ document.getElementById('buscarNumeroBtn').addEventListener('click', async funct
   }
 
   btn.disabled = true;
-  statusBusca.textContent = 'Lançando na planilha...';
+  setLoading(statusBusca, 'Lançando na planilha...');
 
   try {
     const url = `${APPS_SCRIPT_URL}?estacao=${encodeURIComponent('METRÔ ' + estacaoValue)}&id=${encodeURIComponent(idServicoValue)}&reqId=${encodeURIComponent(gerarReqId())}`;
@@ -836,7 +859,7 @@ document.getElementById('excluirLinhaBtn').addEventListener('click', async funct
   if (!confirmar) return;
 
   btn.disabled = true;
-  statusBusca.textContent = 'Excluindo da planilha...';
+  setLoading(statusBusca, 'Excluindo da planilha...');
 
   try {
     const url = `${APPS_SCRIPT_URL}?action=excluir&numero=${encodeURIComponent(numDocValue)}&reqId=${encodeURIComponent(gerarReqId())}`;
@@ -863,6 +886,8 @@ document.getElementById('excluirLinhaBtn').addEventListener('click', async funct
 document.getElementById('form').addEventListener('submit', async function(e) {
   e.preventDefault();
   const statusEl = document.getElementById('status');
+  const gerarBtn = document.getElementById('gerarPdfBtn');
+  gerarBtn.disabled = true;
   try {
     const dataVal = document.getElementById('data').value;
     const [horaInicio, horaFim] = document.getElementById('turno').value.split('-');
@@ -964,6 +989,8 @@ document.getElementById('form').addEventListener('submit', async function(e) {
   } catch (err) {
     statusEl.textContent = 'Não foi possível gerar o PDF. Confira os campos e tente novamente.';
     console.error(err);
+  } finally {
+    gerarBtn.disabled = false;
   }
 });
 
@@ -986,7 +1013,7 @@ resetFormState();
 // (o iPhone mantém o atalho da tela inicial "suspenso" em vez de recarregar sozinho,
 // então esse é o jeito de avisar que uma atualização está disponível sem precisar
 // remover e adicionar o atalho de novo)
-const CURRENT_VERSION = 'v1.25';
+const CURRENT_VERSION = 'v1.26';
 
 async function checkForUpdate() {
   try {
