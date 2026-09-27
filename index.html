@@ -23,6 +23,12 @@
   v1.17 — Reset só acontece de verdade após 10 min em segundo plano (trocar de app rapidamente não apaga mais o que já foi digitado); mensagens de erro da planilha diferenciando sem conexão / erro de rede / erro retornado pela planilha
   v1.18 — "Buscar número" e "Excluir" agora mexem direto na planilha oficial (Excel), sem cópia intermediária; cada chamada leva um código único (reqId) para o script não duplicar linhas se a rede reenviar a mesma chamada
   v1.19 — Botão "Abrir planilha oficial" para conferir rapidamente se o número foi lançado ou excluído certinho
+  v1.20 — Aviso automático de nova versão disponível (o iPhone mantém o atalho salvo suspenso e não recarrega sozinho; agora o site confere e avisa pra atualizar)
+  v1.21 — Atualização automática e silenciosa quando não há nada preenchido; só mostra o aviso pra confirmar se houver dados digitados que seriam perdidos
+  v1.22 — Sempre atualiza sozinho pra versão mais nova, sem perguntar nada (mesmo com campos preenchidos)
+  v1.23 — Reorganizado o grupo de botões da planilha: "Buscar número" centralizado em destaque, "Excluir esta linha" e "Abrir planilha oficial" lado a lado abaixo, com respiro do campo ID acima
+  v1.24 — Removida a linha divisória; os três botões da planilha com a mesma altura e tamanho de texto, sem quebrar linha ("Abrir planilha oficial" virou "Planilha oficial")
+  v1.25 — Botão "Planilha oficial" navega na mesma janela em vez de abrir em nova aba, tentando evitar a confirmação "Abrir Link?" do iOS no modo tela cheia
 -->
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
@@ -320,7 +326,31 @@
     text-decoration: none;
     display: inline-flex;
     align-items: center;
+    justify-content: center;
   }
+  .planilha-actions {
+    display: grid;
+    gap: 10px;
+    margin-top: 20px;
+  }
+  .planilha-primary {
+    width: 100%;
+    text-align: center;
+  }
+  .planilha-secondary {
+    gap: 10px;
+  }
+  .planilha-actions .secondary-btn {
+    min-height: 44px;
+    box-sizing: border-box;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    white-space: nowrap;
+    font-size: 14px;
+    padding: 10px 8px;
+  }
+
   .confirm-overlay {
     position: fixed;
     inset: 0;
@@ -368,7 +398,7 @@
 <body>
 <div class="wrap">
   <header>
-    <span class="version-tag">v1.19</span>
+    <span class="version-tag">v1.25</span>
     <p class="eyebrow">PMESP &middot; DEJEM &middot; RELATÓRIO DE SERVIÇO</p>
     <h1>Gerador de Relatório</h1>
     <p class="sub">Preencha o que muda a cada plantão. Data, telefone, sua assinatura e o restante do texto ficam fixos, exatamente como no modelo original.</p>
@@ -415,16 +445,14 @@
           <input type="text" id="idServico" inputmode="numeric" autocomplete="off" placeholder="8800854" required>
         </div>
       </div>
-      <div class="row" style="margin-top: 4px;">
-        <div>
-          <div style="display: flex; gap: 8px; flex-wrap: wrap;">
-            <button type="button" id="buscarNumeroBtn" class="secondary-btn">Buscar número na planilha</button>
-            <button type="button" id="excluirLinhaBtn" class="secondary-btn danger-btn">Excluir esta linha</button>
-            <a href="https://docs.google.com/spreadsheets/d/1bbtpNzrOa1YoWeU16ZjPM5weROnIXAh3/edit" target="_blank" rel="noopener" class="secondary-btn link-btn">Abrir planilha oficial</a>
-          </div>
-          <p class="hint">Preenche a Estação (abaixo) e o Número da ID acima, depois toque em "Buscar número" para lançar a linha e trazer o número certo. Errou algo? Toque em "Excluir esta linha" para apagar da planilha o número que está no campo acima.</p>
-          <p class="status" id="statusBusca" role="status" aria-live="polite"></p>
+      <div class="planilha-actions">
+        <button type="button" id="buscarNumeroBtn" class="secondary-btn planilha-primary">Buscar número na planilha</button>
+        <div class="row two planilha-secondary">
+          <button type="button" id="excluirLinhaBtn" class="secondary-btn danger-btn">Excluir esta linha</button>
+          <button type="button" id="abrirPlanilhaBtn" class="secondary-btn link-btn">Planilha oficial</button>
         </div>
+        <p class="hint">Preenche a Estação (abaixo) e o Número da ID acima, depois toque em "Buscar número" para lançar a linha e trazer o número certo. Errou algo? Toque em "Excluir esta linha" para apagar da planilha o número que está no campo acima.</p>
+        <p class="status" id="statusBusca" role="status" aria-live="polite"></p>
       </div>
     </fieldset>
 
@@ -695,6 +723,10 @@ document.getElementById('assinarBtn').addEventListener('click', async function()
   }
 });
 
+document.getElementById('abrirPlanilhaBtn').addEventListener('click', function() {
+  window.location.href = 'https://docs.google.com/spreadsheets/d/1bbtpNzrOa1YoWeU16ZjPM5weROnIXAh3/edit';
+});
+
 // --- Buscar número do documento na planilha ---
 const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzkOFUTbK8PoJLDpwQm4j7sTEX8zb0_rft6Z9Z97-iyD03GafyfyCTls_K0OC6sGsc/exec';
 
@@ -950,12 +982,36 @@ function maybeReset() {
 
 resetFormState();
 
+// --- Verifica se existe uma versão mais nova publicada no GitHub ---
+// (o iPhone mantém o atalho da tela inicial "suspenso" em vez de recarregar sozinho,
+// então esse é o jeito de avisar que uma atualização está disponível sem precisar
+// remover e adicionar o atalho de novo)
+const CURRENT_VERSION = 'v1.25';
+
+async function checkForUpdate() {
+  try {
+    const resp = await fetch(window.location.pathname + '?_cb=' + Date.now(), { cache: 'no-store' });
+    if (!resp.ok) return;
+    const html = await resp.text();
+    const match = html.match(/<span class="version-tag">(v[\d.]+)<\/span>/);
+    if (match && match[1] !== CURRENT_VERSION) {
+      // Sempre usa a versão mais atual, sem perguntar
+      window.location.href = window.location.pathname + '?_cb=' + Date.now();
+    }
+  } catch (err) {
+    // silencioso — não incomoda o usuário se a checagem falhar
+  }
+}
+
+checkForUpdate();
+
 window.addEventListener('pageshow', function(event) {
   if (!event.persisted) {
     resetFormState();
   } else {
     maybeReset();
   }
+  checkForUpdate();
 });
 
 document.addEventListener('visibilitychange', function() {
@@ -963,6 +1019,7 @@ document.addEventListener('visibilitychange', function() {
     hiddenAt = Date.now();
   } else if (document.visibilityState === 'visible') {
     maybeReset();
+    checkForUpdate();
   }
 });
 </script>
