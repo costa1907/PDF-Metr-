@@ -17,6 +17,10 @@
   v1.11 — Ícone personalizado (a própria assinatura) para o atalho na tela inicial; confirmação com resumo dos dados antes de gerar o Relatório DEJEM e antes de assinar a escala
   v1.12 — Ícone do atalho corrigido: precisa ser um arquivo próprio (apple-touch-icon.png) ao lado do index.html no GitHub, o iOS não aceita ícone embutido no código para "Adicionar à Tela de Início"
   v1.13 — Paleta escura com verde neon (inspirada no MestreOrça AI), sempre ativa
+  v1.14 — Contorno de foco dos campos mais discreto (sombra em vez de contorno grosso); removida a sugestão de "Preencher Automaticamente" do teclado nos campos numéricos
+  v1.15 — Corrigido contorno verde incompleto no campo "Número do relatório" (o campo vizinho tampava um pedaço); campo focado agora fica por cima dos vizinhos
+  v1.16 — Site sempre reabre zerado: reset completo dos campos (inclusive o PDF anexado em "Assinar Escala") ao reabrir o atalho ou voltar do segundo plano
+  v1.17 — Reset só acontece de verdade após 10 min em segundo plano (trocar de app rapidamente não apaga mais o que já foi digitado); mensagens de erro da planilha diferenciando sem conexão / erro de rede / erro retornado pela planilha
 -->
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
@@ -180,8 +184,10 @@
     text-align: left;
   }
   input:focus, select:focus {
-    outline: 2px solid var(--accent-soft);
-    outline-offset: 1px;
+    outline: none;
+    box-shadow: 0 0 0 2px var(--accent-soft);
+    position: relative;
+    z-index: 2;
   }
   .prefix-field {
     display: flex;
@@ -355,7 +361,7 @@
 <body>
 <div class="wrap">
   <header>
-    <span class="version-tag">v1.13</span>
+    <span class="version-tag">v1.17</span>
     <p class="eyebrow">PMESP &middot; DEJEM &middot; RELATÓRIO DE SERVIÇO</p>
     <h1>Gerador de Relatório</h1>
     <p class="sub">Preencha o que muda a cada plantão. Data, telefone, sua assinatura e o restante do texto ficam fixos, exatamente como no modelo original.</p>
@@ -392,14 +398,14 @@
           <label for="numDoc">Número do relatório (parte variável)</label>
           <div class="prefix-field">
             <span>CPAM1-</span>
-            <input type="text" id="numDoc" class="mid-input" inputmode="numeric" placeholder="3206" required>
-            <span class="suffix">/301.1/&hairsp;<input type="text" id="anoSuffixInput" class="mini-year-input" inputmode="numeric" maxlength="2" value="26" aria-label="Ano (2 dígitos)"></span>
+            <input type="text" id="numDoc" class="mid-input" inputmode="numeric" autocomplete="off" placeholder="3206" required>
+            <span class="suffix">/301.1/&hairsp;<input type="text" id="anoSuffixInput" class="mini-year-input" inputmode="numeric" autocomplete="off" maxlength="2" value="26" aria-label="Ano (2 dígitos)"></span>
           </div>
           <p class="hint">O ano final do número é preenchido automaticamente a partir da data acima, mas pode ser editado direto ali (útil se virar o ano e você ainda precisar gerar um relatório do ano anterior).</p>
         </div>
         <div>
           <label for="idServico">Número da ID</label>
-          <input type="text" id="idServico" inputmode="numeric" placeholder="8800854" required>
+          <input type="text" id="idServico" inputmode="numeric" autocomplete="off" placeholder="8800854" required>
         </div>
       </div>
       <div class="row" style="margin-top: 4px;">
@@ -442,11 +448,11 @@
         <div class="row two">
           <div>
             <label for="parceiroRE">RE</label>
-            <input type="text" id="parceiroRE" inputmode="numeric" placeholder="251402-8" required>
+            <input type="text" id="parceiroRE" inputmode="numeric" autocomplete="off" placeholder="251402-8" required>
           </div>
           <div>
             <label for="parceiroNome">Nome</label>
-            <input type="text" id="parceiroNome" placeholder="Vinícius" required>
+            <input type="text" id="parceiroNome" autocomplete="off" placeholder="Vinícius" required>
           </div>
         </div>
       </div>
@@ -531,9 +537,34 @@ function updateAnoSuffix() {
 }
 document.getElementById('data').addEventListener('change', updateAnoSuffix);
 
-// defaults matching a typical shift, editable
-document.getElementById('data').value = new Date().toISOString().slice(0,10);
-updateAnoSuffix();
+// --- Reset completo do site (chamado no carregamento e toda vez que a aba/atalho é reaberto) ---
+function resetFormState() {
+  // Relatório DEJEM
+  document.getElementById('form').reset();
+  document.getElementById('data').value = new Date().toISOString().slice(0,10);
+  document.getElementById('turno').value = '15:00-23:00';
+  document.getElementById('numDoc').value = '';
+  document.getElementById('idServico').value = '';
+  document.getElementById('estacao').value = '';
+  document.getElementById('parceiroGraduacao').value = 'Sd PM';
+  document.getElementById('parceiroRE').value = '';
+  document.getElementById('parceiroNome').value = '';
+  updateAnoSuffix();
+  document.getElementById('status').textContent = '';
+  document.getElementById('statusBusca').textContent = '';
+
+  // Assinar Escala
+  const escalaFile = document.getElementById('escalaFile');
+  if (escalaFile) escalaFile.value = '';
+  const statusAssinar = document.getElementById('statusAssinar');
+  if (statusAssinar) statusAssinar.textContent = '';
+
+  const confirmOverlay = document.getElementById('confirmOverlay');
+  if (confirmOverlay) confirmOverlay.hidden = true;
+
+  // Sempre volta para a primeira aba
+  if (typeof showTab === 'function') showTab('relatorio');
+}
 
 // --- Abas ---
 const tabRelatorioBtn = document.getElementById('tabRelatorioBtn');
@@ -659,6 +690,19 @@ document.getElementById('assinarBtn').addEventListener('click', async function()
 // --- Buscar número do documento na planilha ---
 const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzkOFUTbK8PoJLDpwQm4j7sTEX8zb0_rft6Z9Z97-iyD03GafyfyCTls_K0OC6sGsc/exec';
 
+function mensagemErroPlanilha(err) {
+  if (typeof navigator !== 'undefined' && navigator.onLine === false) {
+    return 'Sem conexão com a internet. Verifique o Wi-Fi/dados e tente de novo.';
+  }
+  if (err instanceof TypeError) {
+    return 'Não foi possível alcançar a planilha agora (falha de rede). Tente novamente em instantes.';
+  }
+  if (err instanceof SyntaxError) {
+    return 'A planilha respondeu de forma inesperada. Tente novamente.';
+  }
+  return 'Erro inesperado ao falar com a planilha. Tente novamente.';
+}
+
 document.getElementById('buscarNumeroBtn').addEventListener('click', async function() {
   const statusBusca = document.getElementById('statusBusca');
   const btn = this;
@@ -680,15 +724,19 @@ document.getElementById('buscarNumeroBtn').addEventListener('click', async funct
   try {
     const url = `${APPS_SCRIPT_URL}?estacao=${encodeURIComponent('METRÔ ' + estacaoValue)}&id=${encodeURIComponent(idServicoValue)}`;
     const resp = await fetch(url);
+    if (!resp.ok) {
+      statusBusca.textContent = `A planilha respondeu com erro (HTTP ${resp.status}). Tente novamente.`;
+      return;
+    }
     const data = await resp.json();
     if (data.numero) {
       document.getElementById('numDoc').value = data.numero;
       statusBusca.textContent = `Número ${data.numero} lançado na planilha e preenchido.`;
     } else {
-      statusBusca.textContent = data.error ? `Erro: ${data.error}` : 'Não foi possível obter o número.';
+      statusBusca.textContent = data.error ? `Erro da planilha: ${data.error}` : 'Não foi possível obter o número.';
     }
   } catch (err) {
-    statusBusca.textContent = 'Não foi possível falar com a planilha agora. Tente novamente.';
+    statusBusca.textContent = mensagemErroPlanilha(err);
     console.error(err);
   } finally {
     btn.disabled = false;
@@ -748,15 +796,19 @@ document.getElementById('excluirLinhaBtn').addEventListener('click', async funct
   try {
     const url = `${APPS_SCRIPT_URL}?action=excluir&numero=${encodeURIComponent(numDocValue)}`;
     const resp = await fetch(url);
+    if (!resp.ok) {
+      statusBusca.textContent = `A planilha respondeu com erro (HTTP ${resp.status}). Tente novamente.`;
+      return;
+    }
     const data = await resp.json();
     if (data.sucesso) {
       statusBusca.textContent = `Linha do número ${numDocValue} excluída da planilha.`;
       document.getElementById('numDoc').value = '';
     } else {
-      statusBusca.textContent = data.error ? `Erro: ${data.error}` : 'Não foi possível excluir.';
+      statusBusca.textContent = data.error ? `Erro da planilha: ${data.error}` : 'Não foi possível excluir.';
     }
   } catch (err) {
-    statusBusca.textContent = 'Não foi possível falar com a planilha agora. Tente novamente.';
+    statusBusca.textContent = mensagemErroPlanilha(err);
     console.error(err);
   } finally {
     btn.disabled = false;
@@ -867,6 +919,37 @@ document.getElementById('form').addEventListener('submit', async function(e) {
   } catch (err) {
     statusEl.textContent = 'Não foi possível gerar o PDF. Confira os campos e tente novamente.';
     console.error(err);
+  }
+});
+
+// Aplica o reset agora que tudo (abas, seleção de estação etc.) já foi montado.
+// Nas próximas vezes, só reseta de verdade se o site ficou mais de 10 minutos em segundo
+// plano — uma troca rápida de app (ex: dar uma olhada no WhatsApp) não apaga o que já foi digitado.
+const RESET_AFTER_MS = 10 * 60 * 1000; // 10 minutos
+let hiddenAt = null;
+
+function maybeReset() {
+  if (hiddenAt !== null && (Date.now() - hiddenAt) > RESET_AFTER_MS) {
+    resetFormState();
+  }
+  hiddenAt = null;
+}
+
+resetFormState();
+
+window.addEventListener('pageshow', function(event) {
+  if (!event.persisted) {
+    resetFormState();
+  } else {
+    maybeReset();
+  }
+});
+
+document.addEventListener('visibilitychange', function() {
+  if (document.visibilityState === 'hidden') {
+    hiddenAt = Date.now();
+  } else if (document.visibilityState === 'visible') {
+    maybeReset();
   }
 });
 </script>
