@@ -21,6 +21,7 @@
   v1.15 — Corrigido contorno verde incompleto no campo "Número do relatório" (o campo vizinho tampava um pedaço); campo focado agora fica por cima dos vizinhos
   v1.16 — Site sempre reabre zerado: reset completo dos campos (inclusive o PDF anexado em "Assinar Escala") ao reabrir o atalho ou voltar do segundo plano
   v1.17 — Reset só acontece de verdade após 10 min em segundo plano (trocar de app rapidamente não apaga mais o que já foi digitado); mensagens de erro da planilha diferenciando sem conexão / erro de rede / erro retornado pela planilha
+  v1.18 — "Buscar número" e "Excluir" agora mexem direto na planilha oficial (Excel), sem cópia intermediária; cada chamada leva um código único (reqId) para o script não duplicar linhas se a rede reenviar a mesma chamada
 -->
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
@@ -361,7 +362,7 @@
 <body>
 <div class="wrap">
   <header>
-    <span class="version-tag">v1.17</span>
+    <span class="version-tag">v1.18</span>
     <p class="eyebrow">PMESP &middot; DEJEM &middot; RELATÓRIO DE SERVIÇO</p>
     <h1>Gerador de Relatório</h1>
     <p class="sub">Preencha o que muda a cada plantão. Data, telefone, sua assinatura e o restante do texto ficam fixos, exatamente como no modelo original.</p>
@@ -690,6 +691,11 @@ document.getElementById('assinarBtn').addEventListener('click', async function()
 // --- Buscar número do documento na planilha ---
 const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzkOFUTbK8PoJLDpwQm4j7sTEX8zb0_rft6Z9Z97-iyD03GafyfyCTls_K0OC6sGsc/exec';
 
+function gerarReqId() {
+  if (window.crypto && crypto.randomUUID) return crypto.randomUUID();
+  return 'r' + Date.now() + '_' + Math.random().toString(36).slice(2);
+}
+
 function mensagemErroPlanilha(err) {
   if (typeof navigator !== 'undefined' && navigator.onLine === false) {
     return 'Sem conexão com a internet. Verifique o Wi-Fi/dados e tente de novo.';
@@ -722,7 +728,7 @@ document.getElementById('buscarNumeroBtn').addEventListener('click', async funct
   statusBusca.textContent = 'Lançando na planilha...';
 
   try {
-    const url = `${APPS_SCRIPT_URL}?estacao=${encodeURIComponent('METRÔ ' + estacaoValue)}&id=${encodeURIComponent(idServicoValue)}`;
+    const url = `${APPS_SCRIPT_URL}?estacao=${encodeURIComponent('METRÔ ' + estacaoValue)}&id=${encodeURIComponent(idServicoValue)}&reqId=${encodeURIComponent(gerarReqId())}`;
     const resp = await fetch(url);
     if (!resp.ok) {
       statusBusca.textContent = `A planilha respondeu com erro (HTTP ${resp.status}). Tente novamente.`;
@@ -794,7 +800,7 @@ document.getElementById('excluirLinhaBtn').addEventListener('click', async funct
   statusBusca.textContent = 'Excluindo da planilha...';
 
   try {
-    const url = `${APPS_SCRIPT_URL}?action=excluir&numero=${encodeURIComponent(numDocValue)}`;
+    const url = `${APPS_SCRIPT_URL}?action=excluir&numero=${encodeURIComponent(numDocValue)}&reqId=${encodeURIComponent(gerarReqId())}`;
     const resp = await fetch(url);
     if (!resp.ok) {
       statusBusca.textContent = `A planilha respondeu com erro (HTTP ${resp.status}). Tente novamente.`;
