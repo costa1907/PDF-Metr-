@@ -22,6 +22,7 @@
   v1.16 — Site sempre reabre zerado: reset completo dos campos (inclusive o PDF anexado em "Assinar Escala") ao reabrir o atalho ou voltar do segundo plano
   v1.17 — Reset só acontece de verdade após 10 min em segundo plano (trocar de app rapidamente não apaga mais o que já foi digitado); mensagens de erro da planilha diferenciando sem conexão / erro de rede / erro retornado pela planilha
   v1.18 — "Buscar número" e "Excluir" agora mexem direto na planilha oficial (Excel), sem cópia intermediária; cada chamada leva um código único (reqId) para o script não duplicar linhas se a rede reenviar a mesma chamada
+  v1.19 — Botão "Abrir planilha oficial" para conferir rapidamente se o número foi lançado ou excluído certinho
 -->
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
@@ -315,6 +316,11 @@
     color: #ff6b5b;
   }
   .danger-btn:hover { background: rgba(255, 107, 91, 0.1); }
+  .link-btn {
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+  }
   .confirm-overlay {
     position: fixed;
     inset: 0;
@@ -362,7 +368,7 @@
 <body>
 <div class="wrap">
   <header>
-    <span class="version-tag">v1.18</span>
+    <span class="version-tag">v1.19</span>
     <p class="eyebrow">PMESP &middot; DEJEM &middot; RELATÓRIO DE SERVIÇO</p>
     <h1>Gerador de Relatório</h1>
     <p class="sub">Preencha o que muda a cada plantão. Data, telefone, sua assinatura e o restante do texto ficam fixos, exatamente como no modelo original.</p>
@@ -414,6 +420,7 @@
           <div style="display: flex; gap: 8px; flex-wrap: wrap;">
             <button type="button" id="buscarNumeroBtn" class="secondary-btn">Buscar número na planilha</button>
             <button type="button" id="excluirLinhaBtn" class="secondary-btn danger-btn">Excluir esta linha</button>
+            <a href="https://docs.google.com/spreadsheets/d/1bbtpNzrOa1YoWeU16ZjPM5weROnIXAh3/edit" target="_blank" rel="noopener" class="secondary-btn link-btn">Abrir planilha oficial</a>
           </div>
           <p class="hint">Preenche a Estação (abaixo) e o Número da ID acima, depois toque em "Buscar número" para lançar a linha e trazer o número certo. Errou algo? Toque em "Excluir esta linha" para apagar da planilha o número que está no campo acima.</p>
           <p class="status" id="statusBusca" role="status" aria-live="polite"></p>
