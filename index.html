@@ -32,6 +32,9 @@
   v1.26 — Indicador de carregamento (spinner) durante Buscar número/Excluir/Assinar; botões "Gerar PDF" e "Assinar" travados durante o processamento pra evitar clique duplo
   v1.27 — Corrigido bug sério: a atualização automática podia recarregar a página no meio de um "Buscar número"/"Excluir" em andamento, fazendo o pedido antigo terminar sozinho no fundo e duplicar ao tentar de novo. Agora o site nunca se atualiza sozinho enquanto uma operação da planilha está rodando. Os três botões da planilha também ficam travados juntos, e o aviso de carregamento agora avisa pra não fechar/trocar de app enquanto processa
   v1.28 — Contador de segundos ao vivo embaixo do spinner durante "Buscar número"/"Excluir", e o resultado final mostra quanto tempo levou
+  v1.29 — Trava anti-duplicação no script (checa Estação+ID nas últimas linhas antes de criar uma nova); exemplos "142113-1"/"Costa" nos campos do parceiro; removido o aviso "não feche/troque de app"; visual mais "de app": logo no cabeçalho, cartões com sombra, sem o efeito de "quicar" do navegador ao rolar, transição suave entre abas
+  v1.30 — Nova opção "Falta ao serviço" no Relatório DEJEM: muda o texto padrão (item 2 explica a falta e o remanejamento, "De Serviço" lista só o Cb Costa), com campos próprios (Graduação de quem faltou, Nome completo, Pertencente ao); o layout do PDF se ajusta sozinho conforme o tamanho do texto
+  v1.31 — Corrigido o "esconder" dos grupos de campos (o estilo de grade anulava o atributo hidden, então os dois grupos apareciam juntos); campos do parceiro empilhados com espaçamento uniforme; "Nome" virou "Nome de guerra ou QRA"; em "Falta ao serviço" aparecem só Graduação, Nome completo e Pertencente ao, com botão para abrir a planilha do numerador de Parte de Falta
 -->
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
@@ -90,6 +93,7 @@
     padding-top: env(safe-area-inset-top, 0px);
     padding-bottom: env(safe-area-inset-bottom, 0px);
     min-height: 100%;
+    overscroll-behavior-y: none;
   }
   .wrap {
     max-width: 640px;
@@ -101,6 +105,18 @@
     border-bottom: 2px solid var(--accent);
     padding-bottom: 16px;
     position: relative;
+  }
+  .header-brand {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .header-logo {
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
+    flex-shrink: 0;
   }
   .version-tag {
     position: absolute;
@@ -138,10 +154,11 @@
   }
   fieldset {
     border: 1px solid var(--line);
-    border-radius: 6px;
+    border-radius: 10px;
     padding: 18px 18px 20px;
     margin: 0;
     background: var(--paper-dark);
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.25);
   }
   legend {
     font-family: 'Courier New', monospace;
@@ -325,8 +342,13 @@
   .panel {
     display: grid;
     gap: 18px;
+    animation: fadeIn 0.2s ease;
   }
   .panel[hidden] { display: none; }
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(4px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
   .secondary-btn {
     appearance: none;
     border: 1px solid var(--accent);
@@ -351,6 +373,23 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
+  }
+  [hidden] { display: none !important; }
+  .stack {
+    display: grid;
+    gap: 14px;
+  }
+  .stack > .hint { margin: 0; }
+  .block-btn {
+    width: 100%;
+    min-height: 44px;
+    box-sizing: border-box;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    white-space: nowrap;
+    font-size: 14px;
+    padding: 10px 8px;
   }
   .planilha-actions {
     display: grid;
@@ -422,9 +461,14 @@
 <body>
 <div class="wrap">
   <header>
-    <span class="version-tag">v1.28</span>
-    <p class="eyebrow">PMESP &middot; DEJEM &middot; RELATÓRIO DE SERVIÇO</p>
-    <h1>Gerador de Relatório</h1>
+    <span class="version-tag">v1.31</span>
+    <div class="header-brand">
+      <img src="data:image/png;base64,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" alt="" class="header-logo">
+      <div>
+        <p class="eyebrow">PMESP &middot; DEJEM &middot; RELATÓRIO DE SERVIÇO</p>
+        <h1>Gerador de Relatório</h1>
+      </div>
+    </div>
     <p class="sub">Preencha o que muda a cada plantão. Data, telefone, sua assinatura e o restante do texto ficam fixos, exatamente como no modelo original.</p>
   </header>
 
@@ -494,26 +538,57 @@
 
     <fieldset>
       <legend>Parceiro de serviço</legend>
-      <div class="row">
+      <div class="stack">
         <div>
-          <label for="parceiroGraduacao">Graduação</label>
-          <select id="parceiroGraduacao" required>
+          <label for="tipoParceiro">Situação</label>
+          <select id="tipoParceiro">
+            <option value="compareceu" selected>Compareceu ao serviço</option>
+            <option value="falta">Falta ao serviço</option>
+          </select>
+        </div>
+
+        <div id="camposCompareceu" class="stack">
+          <div>
+            <label for="parceiroGraduacao">Graduação</label>
+            <select id="parceiroGraduacao">
             <option value="Sd PM">Sd PM</option>
             <option value="Cb PM">Cb PM</option>
             <option value="3º Sgt PM">3º Sgt PM</option>
             <option value="2º Sgt PM">2º Sgt PM</option>
             <option value="1º Sgt PM">1º Sgt PM</option>
-          </select>
-        </div>
-        <div class="row two">
+            </select>
+          </div>
           <div>
             <label for="parceiroRE">RE</label>
-            <input type="text" id="parceiroRE" inputmode="numeric" autocomplete="off" placeholder="251402-8" required>
+            <input type="text" id="parceiroRE" inputmode="numeric" autocomplete="off" placeholder="142113-1">
           </div>
           <div>
-            <label for="parceiroNome">Nome</label>
-            <input type="text" id="parceiroNome" autocomplete="off" placeholder="Vinícius" required>
+            <label for="parceiroNome">Nome de guerra ou QRA</label>
+            <input type="text" id="parceiroNome" autocomplete="off" placeholder="Costa">
           </div>
+        </div>
+
+        <div id="camposFalta" class="stack" hidden>
+          <div>
+            <label for="faltaGraduacao">Graduação</label>
+            <select id="faltaGraduacao">
+            <option value="Sd PM">Sd PM</option>
+            <option value="Cb PM">Cb PM</option>
+            <option value="3º Sgt PM">3º Sgt PM</option>
+            <option value="2º Sgt PM">2º Sgt PM</option>
+            <option value="1º Sgt PM">1º Sgt PM</option>
+            </select>
+          </div>
+          <div>
+            <label for="faltaNomeCompleto">Nome completo</label>
+            <input type="text" id="faltaNomeCompleto" autocomplete="off" placeholder="Italo Bruno de Lira Bento">
+          </div>
+          <div>
+            <label for="faltaPertencenteA">Pertencente ao</label>
+            <input type="text" id="faltaPertencenteA" autocomplete="off" placeholder="4.BPM/M 3. CIA PM">
+          </div>
+          <p class="hint">O item 2 do relatório vai dizer que essa pessoa foi remanejada para a mesma estação escolhida em "Local do serviço", e o item "De Serviço" vai listar só você.</p>
+          <button type="button" id="abrirNumeradorBtn" class="secondary-btn block-btn">Numerador de Parte de Falta</button>
         </div>
       </div>
     </fieldset>
@@ -597,6 +672,21 @@ function updateAnoSuffix() {
 }
 document.getElementById('data').addEventListener('change', updateAnoSuffix);
 
+// --- Alterna entre "Compareceu ao serviço" e "Falta ao serviço" ---
+function atualizarTipoParceiro() {
+  const tipo = document.getElementById('tipoParceiro').value;
+  const compareceu = tipo === 'compareceu';
+
+  document.getElementById('camposCompareceu').hidden = !compareceu;
+  document.getElementById('camposFalta').hidden = compareceu;
+
+  document.getElementById('parceiroRE').required = compareceu;
+  document.getElementById('parceiroNome').required = compareceu;
+  document.getElementById('faltaNomeCompleto').required = !compareceu;
+  document.getElementById('faltaPertencenteA').required = !compareceu;
+}
+document.getElementById('tipoParceiro').addEventListener('change', atualizarTipoParceiro);
+
 // --- Reset completo do site (chamado no carregamento e toda vez que a aba/atalho é reaberto) ---
 function resetFormState() {
   // Relatório DEJEM
@@ -606,9 +696,14 @@ function resetFormState() {
   document.getElementById('numDoc').value = '';
   document.getElementById('idServico').value = '';
   document.getElementById('estacao').value = '';
+  document.getElementById('tipoParceiro').value = 'compareceu';
   document.getElementById('parceiroGraduacao').value = 'Sd PM';
   document.getElementById('parceiroRE').value = '';
   document.getElementById('parceiroNome').value = '';
+  document.getElementById('faltaGraduacao').value = 'Sd PM';
+  document.getElementById('faltaNomeCompleto').value = '';
+  document.getElementById('faltaPertencenteA').value = '';
+  atualizarTipoParceiro();
   updateAnoSuffix();
   document.getElementById('status').textContent = '';
   document.getElementById('statusBusca').textContent = '';
@@ -757,6 +852,10 @@ document.getElementById('abrirPlanilhaBtn').addEventListener('click', function()
   window.location.href = 'https://docs.google.com/spreadsheets/d/1bbtpNzrOa1YoWeU16ZjPM5weROnIXAh3/edit';
 });
 
+document.getElementById('abrirNumeradorBtn').addEventListener('click', function() {
+  window.location.href = 'https://docs.google.com/spreadsheets/d/1q9LdCABSxSQ3DN01yvnzWbESmKpZQ152/edit';
+});
+
 // --- Buscar número do documento na planilha ---
 const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzkOFUTbK8PoJLDpwQm4j7sTEX8zb0_rft6Z9Z97-iyD03GafyfyCTls_K0OC6sGsc/exec';
 
@@ -779,7 +878,7 @@ function iniciarContador(el, texto) {
 }
 
 function setPlanilhaBotoesDisabled(desabilitado) {
-  ['buscarNumeroBtn', 'excluirLinhaBtn', 'abrirPlanilhaBtn'].forEach(id => {
+  ['buscarNumeroBtn', 'excluirLinhaBtn', 'abrirPlanilhaBtn', 'abrirNumeradorBtn'].forEach(id => {
     const el = document.getElementById(id);
     if (el) el.disabled = desabilitado;
   });
@@ -820,7 +919,7 @@ document.getElementById('buscarNumeroBtn').addEventListener('click', async funct
 
   operacaoEmAndamento = true;
   setPlanilhaBotoesDisabled(true);
-  const pararContador = iniciarContador(statusBusca, 'Lançando na planilha... não feche nem troque de app');
+  const pararContador = iniciarContador(statusBusca, 'Lançando na planilha...');
 
   try {
     const url = `${APPS_SCRIPT_URL}?estacao=${encodeURIComponent('METRÔ ' + estacaoValue)}&id=${encodeURIComponent(idServicoValue)}&reqId=${encodeURIComponent(gerarReqId())}`;
@@ -896,7 +995,7 @@ document.getElementById('excluirLinhaBtn').addEventListener('click', async funct
 
   operacaoEmAndamento = true;
   setPlanilhaBotoesDisabled(true);
-  const pararContador = iniciarContador(statusBusca, 'Excluindo da planilha... não feche nem troque de app');
+  const pararContador = iniciarContador(statusBusca, 'Excluindo da planilha...');
 
   try {
     const url = `${APPS_SCRIPT_URL}?action=excluir&numero=${encodeURIComponent(numDocValue)}&reqId=${encodeURIComponent(gerarReqId())}`;
@@ -938,17 +1037,25 @@ document.getElementById('form').addEventListener('submit', async function(e) {
     const estacaoObj = STATIONS.find(s => s.name === estacaoValue) || { name: estacaoValue, title: estacaoValue };
     const estacao = estacaoObj.name;
     const estacaoTitle = estacaoObj.title;
+    const tipoParceiro = document.getElementById('tipoParceiro').value;
     const parceiroGraduacao = document.getElementById('parceiroGraduacao').value;
     const parceiroRE = document.getElementById('parceiroRE').value.trim();
     const parceiroNome = document.getElementById('parceiroNome').value.trim();
     const parceiro = `${parceiroGraduacao} ${parceiroRE} ${parceiroNome}`;
+
+    const faltaGraduacao = document.getElementById('faltaGraduacao').value;
+    const faltaNomeCompleto = document.getElementById('faltaNomeCompleto').value.trim();
+    const faltaPertencenteA = document.getElementById('faltaPertencenteA').value.trim();
 
     const anoSuffix = document.getElementById('anoSuffixInput').value.trim();
     const dataFormatada = formatDate(dataVal);
     const [hiH, hiM] = horaInicio.split(':');
     const [hfH, hfM] = horaFim.split(':');
 
-    const resumo = `Data: ${dataFormatada}\nTurno: ${horaInicio} às ${horaFim}\nNúmero: CPAM1-${numDoc}/301.1/${anoSuffix}\nID: ${idServico}\nEstação: METRÔ ${estacao}\nParceiro: ${parceiro}`;
+    const resumoParceiro = tipoParceiro === 'compareceu'
+      ? `Parceiro: ${parceiro}`
+      : `Falta: ${faltaGraduacao} ${faltaNomeCompleto} (${faltaPertencenteA})`;
+    const resumo = `Data: ${dataFormatada}\nTurno: ${horaInicio} às ${horaFim}\nNúmero: CPAM1-${numDoc}/301.1/${anoSuffix}\nID: ${idServico}\nEstação: METRÔ ${estacao}\n${resumoParceiro}`;
     const confirmarGerar = await confirmarCustom(`Conferir antes de gerar:\n\n${resumo}`, { okLabel: 'Gerar PDF', danger: false });
     if (!confirmarGerar) {
       statusEl.textContent = '';
@@ -979,14 +1086,44 @@ document.getElementById('form').addEventListener('submit', async function(e) {
 
     doc.setFont('times', 'normal');
     doc.setFontSize(12);
-    const p1a = `1. Informo a V.S.ª que nesta data, o serviço da Atividade DEJEM Metrô ${estacaoTitle}, no horário das`;
-    const p1b = `${hiH}h${hiM}min às ${hfH}h${hfM}min, transcorreu sem novidades.`;
-    doc.text(p1a, 56.7, 333.6 + 12 * OFFSET);
-    doc.text(p1b, 56.7, 347.4 + 12 * OFFSET);
 
-    line(56.7, 375.0, 12, false, '2. De Serviço:');
-    line(56.7, 402.6, 12, false, `2. 1. Cb PM 142113-1 Costa e ${parceiro}.`);
-    line(56.7, 430.2, 12, false, '3. Telefone do Cmt: (11) 94769-0037.');
+    let telefoneY;
+
+    if (tipoParceiro === 'compareceu') {
+      const p1a = `1. Informo a V.S.ª que nesta data, o serviço da Atividade DEJEM Metrô ${estacaoTitle}, no horário das`;
+      const p1b = `${hiH}h${hiM}min às ${hfH}h${hfM}min, transcorreu sem novidades.`;
+      doc.text(p1a, 56.7, 333.6 + 12 * OFFSET);
+      doc.text(p1b, 56.7, 347.4 + 12 * OFFSET);
+
+      line(56.7, 375.0, 12, false, '2. De Serviço:');
+      line(56.7, 402.6, 12, false, `2. 1. Cb PM 142113-1 Costa e ${parceiro}.`);
+      telefoneY = 430.2;
+      line(56.7, telefoneY, 12, false, '3. Telefone do Cmt: (11) 94769-0037.');
+    } else {
+      // Falta ao serviço: layout com altura variável, já que o item 2 muda de tamanho
+      // conforme o nome/unidade digitados.
+      const maxWidth = 481.9;
+      const lineHeight = 13.8;
+      let y = 333.6;
+
+      function paragrafo(texto) {
+        const linhas = doc.splitTextToSize(texto, maxWidth);
+        linhas.forEach((linha, i) => {
+          doc.text(linha, 56.7, y + 12 * OFFSET + i * lineHeight);
+        });
+        y += (linhas.length + 1) * lineHeight;
+      }
+
+      const item1 = `1. Informo a V.S.ª que nesta data, o serviço da Atividade DEJEM Metrô ${estacaoTitle}, no horário das ${hiH}h${hiM}min às ${hfH}h${hfM}min, transcorreu com as seguintes novidades.`;
+      const item2 = `2. Devido à falta do ${faltaGraduacao} ${faltaNomeCompleto}, pertencente ao ${faltaPertencenteA}, este policial militar foi remanejado para o Metrô ${estacaoTitle}, para compor a equipe, conforme orientação do pessoal do respectivo metrô.`;
+
+      paragrafo(item1);
+      paragrafo(item2);
+      paragrafo('3. De Serviço: ');
+      paragrafo('3.1. Cb PM 142113-1 Costa.');
+      telefoneY = y;
+      line(56.7, telefoneY, 12, false, '4. Telefone do Cmt: (11) 94769-0037.');
+    }
 
     const nameText = 'CB PM 142113-1 THIAGO SILVA COSTA';
     const cmtText = 'Cmt da DEJEM';
@@ -996,16 +1133,22 @@ document.getElementById('form').addEventListener('submit', async function(e) {
     const nameWidth = doc.getTextWidth(nameText);
     const nameCenterX = nameX + nameWidth / 2;
 
+    // Mesmo espaçamento do modelo original, só que a partir da posição real do telefone
+    // (que muda de lugar quando o item 2 de "Falta ao serviço" ocupa mais de uma linha)
+    const sigY = telefoneY + 115.08;
+    const nameY = telefoneY + 171.6;
+    const cmtY = telefoneY + 194.3;
+
     const sigWidth = 62.88;
     const sigHeight = 38.64;
     const sigX = nameCenterX - sigWidth / 2;
-    doc.addImage(SIG_B64, 'PNG', sigX, 545.28, sigWidth, sigHeight);
+    doc.addImage(SIG_B64, 'PNG', sigX, sigY, sigWidth, sigHeight);
 
-    line(nameX, 601.8, 12, false, nameText);
+    line(nameX, nameY, 12, false, nameText);
 
     const cmtWidth = doc.getTextWidth(cmtText);
     const cmtX = nameCenterX - cmtWidth / 2;
-    line(cmtX, 624.5, 12, false, cmtText);
+    line(cmtX, cmtY, 12, false, cmtText);
 
     const fileName = `Relatorio_Ass_${idServico || 'servico'}.pdf`;
     const pdfBlob = doc.output('blob');
@@ -1055,7 +1198,7 @@ resetFormState();
 // (o iPhone mantém o atalho da tela inicial "suspenso" em vez de recarregar sozinho,
 // então esse é o jeito de avisar que uma atualização está disponível sem precisar
 // remover e adicionar o atalho de novo)
-const CURRENT_VERSION = 'v1.28';
+const CURRENT_VERSION = 'v1.31';
 let operacaoEmAndamento = false;
 
 async function checkForUpdate() {
