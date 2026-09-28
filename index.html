@@ -559,15 +559,13 @@
               <input type="text" id="numDoc" class="mid-input" inputmode="numeric" autocomplete="off" placeholder="3206" required>
               <span class="suffix">/301.1/&hairsp;<input type="text" id="anoSuffixInput" class="mini-year-input" inputmode="numeric" autocomplete="off" maxlength="2" value="26" aria-label="Ano (2 dígitos)"></span>
             </div>
-            <p class="hint">O ano final do número é preenchido automaticamente a partir da data acima, mas pode ser editado direto ali (útil se virar o ano e você ainda precisar gerar um relatório do ano anterior).</p>
           </div>
           <div class="planilha-actions">
-            <button type="button" id="buscarNumeroBtn" class="secondary-btn planilha-primary">Buscar número na planilha</button>
+            <button type="button" id="buscarNumeroBtn" class="secondary-btn planilha-primary">Gerar Numerador de Relatório</button>
             <div class="row two planilha-secondary">
-              <button type="button" id="excluirLinhaBtn" class="secondary-btn danger-btn">Excluir esta linha</button>
-              <button type="button" id="abrirPlanilhaBtn" class="secondary-btn link-btn">Planilha oficial</button>
+              <button type="button" id="excluirLinhaBtn" class="secondary-btn danger-btn">Excluir Numerador</button>
+              <button type="button" id="abrirPlanilhaBtn" class="secondary-btn link-btn">Ver Planilha</button>
             </div>
-            <p class="hint">Preenche a Estação (abaixo) e o Número da ID acima, depois toque em "Buscar número" para lançar a linha e trazer o número certo. Errou algo? Toque em "Excluir esta linha" para apagar da planilha o número que está no campo acima.</p>
             <p class="status" id="statusBusca" role="status" aria-live="polite"></p>
           </div>
         </div>
@@ -580,15 +578,13 @@
               <input type="text" id="numeroParte" class="mid-input" inputmode="numeric" autocomplete="off" placeholder="1332">
               <span class="suffix">/301.1/&hairsp;<input type="text" id="anoSuffixParte" class="mini-year-input" inputmode="numeric" autocomplete="off" maxlength="2" value="26" aria-label="Ano (2 dígitos)"></span>
             </div>
-            <p class="hint">O ano final do número é preenchido automaticamente a partir da data do serviço, mas pode ser editado direto ali.</p>
           </div>
           <div class="planilha-actions">
-            <button type="button" id="buscarParteBtn" class="secondary-btn planilha-primary">Buscar número da Parte de Falta</button>
+            <button type="button" id="buscarParteBtn" class="secondary-btn planilha-primary">Gerar Numerador de Parte de Falta</button>
             <div class="row two planilha-secondary">
-              <button type="button" id="excluirParteBtn" class="secondary-btn danger-btn">Excluir esta linha</button>
-              <button type="button" id="abrirParteBtn" class="secondary-btn link-btn">Planilha de partes</button>
+              <button type="button" id="excluirParteBtn" class="secondary-btn danger-btn">Excluir Numerador</button>
+              <button type="button" id="abrirParteBtn" class="secondary-btn link-btn">Ver Planilha</button>
             </div>
-            <p class="hint">Usa o Número da ID e a Data do serviço. Lança a linha (Cb PM, Thiago Silva Costa, ID e data) no numerador de parte e traz o número. Errou algo? Toque em "Excluir esta linha" para apagar da planilha o número que está no campo acima.</p>
             <p class="status" id="statusParte" role="status" aria-live="polite"></p>
           </div>
         </div>
