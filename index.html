@@ -50,6 +50,7 @@
   v1.44 — "Número da ID" virou "Número do ID" nos rótulos e avisos da tela (o texto impresso no PDF continua igual); botão "Abrir AnyConnect" renomeado pra "Conectar ao AnyConnect" (removido o texto explicativo embaixo dele); "Abrir escala na intranet" renomeado pra "Pesquisar Escala"; reduzido o espaço vazio entre o botão Assinar e o bloco "Buscar escala na intranet" logo abaixo
   v1.45 — Reordenado "Assinar Escala": "Buscar escala na intranet" subiu pro topo (antes de "Escala para assinar"), seguindo a ordem real do uso (conectar/pesquisar → baixar → anexar → assinar); botão "Assinar" agora fica por último, sem sobrar vazio depois dele
   v1.46 — Ajustes finos de texto: "Número da ID" também virou "Número do ID" no texto impresso do PDF (faltava alinhar com a tela); "Preencha a ID antes de abrir" virou "Preencha o ID antes de abrir"; removidas as referências "(abaixo)" e "(lá em cima)" das mensagens de campo faltando (Gerar Numerador de Relatório e Gerar Numerador de Parte de Falta); resumo de confirmação do Relatório corrigido de "(reforço veio)" pra "(fui reforçado)", alinhado com o nome atual do botão
+  v1.47 — Nova aba "Enviar E-mail": mostra os PDFs já gerados nesta sessão (Relatório, Parte de Falta, Escala assinada) marcados sozinhos pra anexar, com assunto e mensagem preenchidos automaticamente (Data/Estação/ID) e editáveis; um toque em "Enviar e-mail" manda tudo pelo Gmail (cpam1dejemmetro@policiamilitar.sp.gov.br, cópia thiago_costa1907@hotmail.com) através do mesmo Apps Script da numeração, e confirma quando o e-mail cai em "Enviados" — precisa da função nova no Apps Script (fornecida à parte) publicada como versão nova do site do script
 -->
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
@@ -471,6 +472,52 @@
     gap: 10px;
     margin-top: 20px;
   }
+  textarea {
+    width: 100%;
+    padding: 9px 10px;
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    background: var(--white);
+    color: var(--ink);
+    font-family: Georgia, 'Times New Roman', serif;
+    font-size: 15px;
+    resize: vertical;
+    min-height: 150px;
+  }
+  textarea:focus {
+    outline: none;
+    box-shadow: 0 0 0 2px var(--accent-soft);
+  }
+  .check-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    background: var(--white);
+    cursor: pointer;
+  }
+  .check-row input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    accent-color: var(--accent);
+    flex-shrink: 0;
+  }
+  .check-row .check-label {
+    flex: 1;
+    margin: 0;
+    font-size: 14px;
+    color: var(--ink);
+  }
+  .check-row .check-status {
+    font-family: 'Courier New', monospace;
+    font-size: 11px;
+    color: var(--ink-soft);
+    text-align: right;
+  }
+  .check-row.disponivel .check-status { color: var(--accent-soft); }
+  .check-row.indisponivel { opacity: 0.55; cursor: default; }
   .planilha-primary {
     width: 100%;
     text-align: center;
@@ -536,7 +583,7 @@
 <body>
 <div class="wrap">
   <header>
-    <span class="version-tag">v1.46</span>
+    <span class="version-tag">v1.47</span>
     <div class="header-brand">
       <img src="data:image/png;base64,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" alt="" class="header-logo">
       <div>
@@ -550,6 +597,7 @@
   <div class="tabs" role="tablist">
     <button type="button" class="tab-btn active" id="tabRelatorioBtn" role="tab" aria-selected="true">Relatório DEJEM</button>
     <button type="button" class="tab-btn" id="tabAssinarBtn" role="tab" aria-selected="false">Assinar Escala</button>
+    <button type="button" class="tab-btn" id="tabEnviarBtn" role="tab" aria-selected="false">Enviar E-mail</button>
   </div>
 
   <div id="panel-relatorio" class="panel">
@@ -831,6 +879,50 @@
       <p class="status" id="statusAssinar" role="status" aria-live="polite"></p>
     </div>
   </div>
+
+  <div id="panel-enviar" class="panel" hidden>
+    <fieldset>
+      <legend>Documentos para anexar</legend>
+      <div class="stack" id="listaAnexos">
+        <label class="check-row indisponivel" id="checkRowRelatorio">
+          <input type="checkbox" id="anexarRelatorio" disabled>
+          <span class="check-label">Relatório DEJEM</span>
+          <span class="check-status" id="statusAnexoRelatorio">não gerado ainda</span>
+        </label>
+        <label class="check-row indisponivel" id="checkRowParte">
+          <input type="checkbox" id="anexarParte" disabled>
+          <span class="check-label">Parte de Falta</span>
+          <span class="check-status" id="statusAnexoParte">não gerada ainda</span>
+        </label>
+        <label class="check-row indisponivel" id="checkRowEscala">
+          <input type="checkbox" id="anexarEscala" disabled>
+          <span class="check-label">Escala assinada</span>
+          <span class="check-status" id="statusAnexoEscala">não gerada ainda</span>
+        </label>
+      </div>
+      <p class="hint">Marcado sozinho assim que você gera o documento nas outras abas, nesta mesma sessão (sem precisar gerar de novo).</p>
+    </fieldset>
+
+    <fieldset>
+      <legend>Mensagem</legend>
+      <div class="stack">
+        <div>
+          <label for="assuntoEmail">Assunto</label>
+          <input type="text" id="assuntoEmail" autocomplete="off">
+        </div>
+        <div>
+          <label for="mensagemEmail">Corpo do e-mail</label>
+          <textarea id="mensagemEmail" rows="9"></textarea>
+        </div>
+      </div>
+      <p class="hint">Preenchido sozinho com os dados de Data/Estação/ID já digitados ali em cima. Pode editar à vontade antes de enviar.</p>
+    </fieldset>
+
+    <div class="stack" style="gap: 8px;">
+      <button type="button" id="enviarEmailBtn">Enviar e-mail</button>
+      <p class="status" id="statusEnviarEmail" role="status" aria-live="polite"></p>
+    </div>
+  </div>
 </div>
 
 <div id="confirmOverlay" class="confirm-overlay" hidden>
@@ -1020,6 +1112,17 @@ function resetFormState() {
   const statusEscalaIntranet = document.getElementById('statusEscalaIntranet');
   if (statusEscalaIntranet) statusEscalaIntranet.textContent = '';
 
+  // Enviar E-mail
+  ultimosDocumentos = { relatorio: null, parte: null, escala: null };
+  emailCamposPreenchidos = false;
+  if (typeof atualizarChecklistAnexos === 'function') atualizarChecklistAnexos();
+  const assuntoEmail = document.getElementById('assuntoEmail');
+  if (assuntoEmail) assuntoEmail.value = '';
+  const mensagemEmail = document.getElementById('mensagemEmail');
+  if (mensagemEmail) mensagemEmail.value = '';
+  const statusEnviarEmail = document.getElementById('statusEnviarEmail');
+  if (statusEnviarEmail) statusEnviarEmail.textContent = '';
+
   const confirmOverlay = document.getElementById('confirmOverlay');
   if (confirmOverlay) confirmOverlay.hidden = true;
 
@@ -1030,20 +1133,25 @@ function resetFormState() {
 // --- Abas ---
 const tabRelatorioBtn = document.getElementById('tabRelatorioBtn');
 const tabAssinarBtn = document.getElementById('tabAssinarBtn');
+const tabEnviarBtn = document.getElementById('tabEnviarBtn');
 const panelRelatorio = document.getElementById('panel-relatorio');
 const panelAssinar = document.getElementById('panel-assinar');
+const panelEnviar = document.getElementById('panel-enviar');
 
 function showTab(target) {
-  const showRelatorio = target === 'relatorio';
-  panelRelatorio.hidden = !showRelatorio;
-  panelAssinar.hidden = showRelatorio;
-  tabRelatorioBtn.classList.toggle('active', showRelatorio);
-  tabAssinarBtn.classList.toggle('active', !showRelatorio);
-  tabRelatorioBtn.setAttribute('aria-selected', String(showRelatorio));
-  tabAssinarBtn.setAttribute('aria-selected', String(!showRelatorio));
+  panelRelatorio.hidden = target !== 'relatorio';
+  panelAssinar.hidden = target !== 'assinar';
+  panelEnviar.hidden = target !== 'enviar';
+  [[tabRelatorioBtn, 'relatorio'], [tabAssinarBtn, 'assinar'], [tabEnviarBtn, 'enviar']].forEach(([btn, t]) => {
+    const ativo = t === target;
+    btn.classList.toggle('active', ativo);
+    btn.setAttribute('aria-selected', String(ativo));
+  });
+  if (target === 'enviar' && typeof prepararAbaEnviarEmail === 'function') prepararAbaEnviarEmail();
 }
 tabRelatorioBtn.addEventListener('click', () => showTab('relatorio'));
 tabAssinarBtn.addEventListener('click', () => showTab('assinar'));
+tabEnviarBtn.addEventListener('click', () => showTab('enviar'));
 
 // --- Assinar Escala ---
 function base64ToUint8Array(base64) {
@@ -1052,6 +1160,70 @@ function base64ToUint8Array(base64) {
   const bytes = new Uint8Array(binary.length);
   for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
   return bytes;
+}
+
+function bytesToBase64(bytes) {
+  let binary = '';
+  const chunkSize = 0x8000;
+  for (let i = 0; i < bytes.length; i += chunkSize) {
+    binary += String.fromCharCode.apply(null, bytes.subarray(i, i + chunkSize));
+  }
+  return btoa(binary);
+}
+
+// --- Enviar E-mail: guarda os últimos PDFs gerados nesta sessão, prontos pra anexar ---
+let ultimosDocumentos = { relatorio: null, parte: null, escala: null };
+let emailCamposPreenchidos = false;
+
+function atualizarChecklistAnexos() {
+  const mapa = [
+    ['relatorio', 'anexarRelatorio', 'statusAnexoRelatorio', 'checkRowRelatorio', 'não gerado ainda'],
+    ['parte', 'anexarParte', 'statusAnexoParte', 'checkRowParte', 'não gerada ainda'],
+    ['escala', 'anexarEscala', 'statusAnexoEscala', 'checkRowEscala', 'não gerada ainda'],
+  ];
+  mapa.forEach(([chave, checkId, statusId, rowId, textoVazio]) => {
+    const doc = ultimosDocumentos[chave];
+    const checkEl = document.getElementById(checkId);
+    const statusEl = document.getElementById(statusId);
+    const rowEl = document.getElementById(rowId);
+    if (!checkEl || !statusEl || !rowEl) return;
+    if (doc) {
+      checkEl.disabled = false;
+      checkEl.checked = true;
+      statusEl.textContent = `pronto: ${doc.fileName}`;
+      rowEl.classList.add('disponivel');
+      rowEl.classList.remove('indisponivel');
+    } else {
+      checkEl.disabled = true;
+      checkEl.checked = false;
+      statusEl.textContent = textoVazio;
+      rowEl.classList.remove('disponivel');
+      rowEl.classList.add('indisponivel');
+    }
+  });
+}
+
+function montarAssuntoPadrao() {
+  const dataVal = document.getElementById('data').value;
+  const dataFormatada = dataVal ? formatDate(dataVal) : '';
+  return `Atividade DEJEM Metrô CPA/M-1${dataFormatada ? ' - ' + dataFormatada : ''}`;
+}
+
+function montarMensagemPadrao() {
+  const dataVal = document.getElementById('data').value;
+  const dataFormatada = dataVal ? formatDate(dataVal) : '__/__/____';
+  const estacaoValue = document.getElementById('estacao').value || '____________';
+  const idServicoValue = document.getElementById('idServico').value.trim() || '________';
+  return `ORDEM DE SERVIÇO N° CPAM1-058/30/25.\nDo Cmt Pol Área M-1.\nAssunto: Rotina de envio de relatórios - Atividade DEJEM Metrô CPA/M-1.\n\nData do Serviço: ${dataFormatada}\nMetrô: ${estacaoValue}\nID: N° ${idServicoValue}\nEncarregado: CB PM 142113-1 COSTA`;
+}
+
+function prepararAbaEnviarEmail() {
+  atualizarChecklistAnexos();
+  if (!emailCamposPreenchidos) {
+    document.getElementById('assuntoEmail').value = montarAssuntoPadrao();
+    document.getElementById('mensagemEmail').value = montarMensagemPadrao();
+    emailCamposPreenchidos = true;
+  }
 }
 
 async function shareOrDownload(bytes, fileName, statusEl) {
@@ -1144,6 +1316,8 @@ document.getElementById('assinarBtn').addEventListener('click', async function()
 
     const pdfBytes = await pdfDoc.save();
     const fileName = 'Parte_Ass_-_THIAGO_SILVA_COSTA.pdf';
+    ultimosDocumentos.escala = { base64: bytesToBase64(pdfBytes), fileName, geradoEm: new Date() };
+    atualizarChecklistAnexos();
     await shareOrDownload(pdfBytes, fileName, statusEl);
   } catch (err) {
     statusEl.textContent = 'Não foi possível assinar. Confira se o PDF anexado é válido.';
@@ -1151,6 +1325,77 @@ document.getElementById('assinarBtn').addEventListener('click', async function()
   } finally {
     operacaoEmAndamento = false;
     assinarBtnEl.disabled = false;
+  }
+});
+
+document.getElementById('enviarEmailBtn').addEventListener('click', async function() {
+  const statusEl = document.getElementById('statusEnviarEmail');
+  const btn = this;
+
+  const mapaAnexos = [
+    ['relatorio', 'anexarRelatorio'],
+    ['parte', 'anexarParte'],
+    ['escala', 'anexarEscala'],
+  ];
+  const anexosSelecionados = [];
+  mapaAnexos.forEach(([chave, checkId]) => {
+    const checkEl = document.getElementById(checkId);
+    const doc = ultimosDocumentos[chave];
+    if (checkEl && checkEl.checked && doc) {
+      anexosSelecionados.push({ filename: doc.fileName, base64: doc.base64 });
+    }
+  });
+
+  const assunto = document.getElementById('assuntoEmail').value.trim();
+  const mensagem = document.getElementById('mensagemEmail').value.trim();
+
+  if (!anexosSelecionados.length) {
+    statusEl.textContent = 'Marque ao menos um documento pra anexar.';
+    return;
+  }
+  if (!mensagem) {
+    statusEl.textContent = 'Escreva a mensagem do e-mail antes de enviar.';
+    return;
+  }
+
+  const confirmarEnvio = await confirmarCustom(
+    `Enviar e-mail com ${anexosSelecionados.length} anexo(s) para cpam1dejemmetro@policiamilitar.sp.gov.br (cópia: thiago_costa1907@hotmail.com)?`,
+    { okLabel: 'Enviar', danger: false }
+  );
+  if (!confirmarEnvio) {
+    statusEl.textContent = '';
+    return;
+  }
+
+  operacaoEmAndamento = true;
+  btn.disabled = true;
+  const pararContador = iniciarContador(statusEl, 'Enviando e-mail...');
+
+  try {
+    const resp = await fetch(`${APPS_SCRIPT_URL}?reqId=${encodeURIComponent(gerarReqId())}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify({ assunto, mensagem, anexos: anexosSelecionados }),
+    });
+    const segundos = pararContador();
+    if (!resp.ok) {
+      statusEl.textContent = `O servidor respondeu com erro (HTTP ${resp.status}) após ${segundos}s. Tente novamente.`;
+      return;
+    }
+    const data = await resp.json();
+    if (data.error) {
+      statusEl.textContent = data.error;
+      return;
+    }
+    statusEl.textContent = data.confirmado
+      ? `E-mail enviado e confirmado em Enviados (${segundos}s).`
+      : `E-mail enviado (${segundos}s), mas não consegui confirmar em Enviados ainda — confira o Gmail.`;
+  } catch (err) {
+    statusEl.textContent = mensagemErroEnvioEmail(err);
+    console.error(err);
+  } finally {
+    operacaoEmAndamento = false;
+    btn.disabled = false;
   }
 });
 
@@ -1225,6 +1470,19 @@ function mensagemErroPlanilha(err) {
     return 'A planilha respondeu de forma inesperada. Tente novamente.';
   }
   return 'Erro inesperado ao falar com a planilha. Tente novamente.';
+}
+
+function mensagemErroEnvioEmail(err) {
+  if (typeof navigator !== 'undefined' && navigator.onLine === false) {
+    return 'Sem conexão com a internet. Verifique o Wi-Fi/dados e tente de novo.';
+  }
+  if (err instanceof TypeError) {
+    return 'Não foi possível enviar agora (falha de rede). Tente novamente em instantes.';
+  }
+  if (err instanceof SyntaxError) {
+    return 'O servidor respondeu de forma inesperada. Tente novamente.';
+  }
+  return 'Erro inesperado ao enviar o e-mail. Tente novamente.';
 }
 
 document.getElementById('buscarNumeroBtn').addEventListener('click', async function() {
@@ -1730,6 +1988,10 @@ document.getElementById('form').addEventListener('submit', async function(e) {
     const doc = new jsPDF({ unit: 'pt', format: 'a4' });
     desenhar(doc);
 
+    const pdfBase64 = doc.output('datauristring').split(',')[1];
+    ultimosDocumentos[ehParte ? 'parte' : 'relatorio'] = { base64: pdfBase64, fileName, geradoEm: new Date() };
+    atualizarChecklistAnexos();
+
     const pdfBlob = doc.output('blob');
     const pdfFile = new File([pdfBlob], fileName, { type: 'application/pdf' });
 
@@ -1777,7 +2039,7 @@ resetFormState();
 // (o iPhone mantém o atalho da tela inicial "suspenso" em vez de recarregar sozinho,
 // então esse é o jeito de avisar que uma atualização está disponível sem precisar
 // remover e adicionar o atalho de novo)
-const CURRENT_VERSION = 'v1.46';
+const CURRENT_VERSION = 'v1.47';
 let operacaoEmAndamento = false;
 
 async function checkForUpdate() {
