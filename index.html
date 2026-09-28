@@ -39,6 +39,7 @@
   v1.33 — Seletor "Relatório / Parte de Falta" em "Identificação do documento": o Número da ID é comum aos dois e cada tipo mostra só o seu campo de número e os seus botões (buscar, excluir, abrir a planilha); em "Parte de Falta" o bloco do parceiro vira "Policial que faltou"; o PDF da Parte de Falta fica indisponível até o modelo ser configurado
   v1.34 — Parte de Falta ganhou o PDF (modelo Parte_Ass.pdf, arquivo "Parte_Ass.pdf", com o número do numerador, dados de quem faltou incluindo RE, estação, turno e ID); o campo "Situação" foi removido: Relatório = parceiro que compareceu, Parte de Falta = policial que faltou (a variante de Relatório com "Devido à falta do..." deixou de existir na tela); número da Parte com o mesmo formato CPAM1-…/301.1/aa do Relatório
   v1.35 — Botões da planilha renomeados para ficar mais claro: "Buscar número..." virou "Gerar Numerador de Relatório" / "Gerar Numerador de Parte de Falta"; "Excluir esta linha" virou "Excluir Numerador"; "Planilha oficial" e "Planilha de partes" viraram "Ver Planilha"; removidos os textos explicativos abaixo dos botões e o aviso sobre o ano acima deles (em Relatório e em Parte de Falta)
+  v1.36 — Novo seletor "Situação do relatório" (Parceiro veio / Fui remanejado / Reforço veio), pra quando o Relatório também precisa explicar a falta do parceiro: "Fui remanejado" gera o item 2 dizendo que fui remanejado para outra estação, com os dois policiais da equipe de lá; "Reforço veio" gera o item 2 dizendo que um policial de outra estação foi remanejado pra compor a equipe comigo; os dois reaproveitam os campos do policial que faltou (Parte de Falta) e o layout do PDF se ajusta ao tamanho do texto, com "De Serviço" e "Telefone" virando os itens 3 e 4
 -->
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
@@ -386,6 +387,9 @@
     grid-template-columns: 1fr 1fr;
     gap: 8px;
   }
+  .seg.seg-3 {
+    grid-template-columns: 1fr 1fr 1fr;
+  }
   .seg-btn {
     appearance: none;
     border: 1px solid var(--line);
@@ -399,6 +403,10 @@
     border-radius: 6px;
     cursor: pointer;
     box-sizing: border-box;
+  }
+  .seg.seg-3 .seg-btn {
+    font-size: 12px;
+    padding: 10px 4px;
   }
   .seg-btn:hover { background: var(--paper-dark); }
   .seg-btn.active,
@@ -501,7 +509,7 @@
 <body>
 <div class="wrap">
   <header>
-    <span class="version-tag">v1.35</span>
+    <span class="version-tag">v1.36</span>
     <div class="header-brand">
       <img src="data:image/png;base64,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" alt="" class="header-logo">
       <div>
@@ -544,6 +552,15 @@
           <div class="seg" role="group" aria-labelledby="lblTipoDocumento">
             <button type="button" class="seg-btn active" id="segRelatorio" aria-pressed="true">Relatório</button>
             <button type="button" class="seg-btn" id="segParte" aria-pressed="false">Parte de Falta</button>
+          </div>
+        </div>
+
+        <div id="grupoSituacaoRelatorio">
+          <label id="lblSituacaoRelatorio">Situação do relatório</label>
+          <div class="seg seg-3" role="group" aria-labelledby="lblSituacaoRelatorio">
+            <button type="button" class="seg-btn active" id="segCompareceu" aria-pressed="true">Parceiro veio</button>
+            <button type="button" class="seg-btn" id="segRemanejado" aria-pressed="false">Fui remanejado</button>
+            <button type="button" class="seg-btn" id="segReforco" aria-pressed="false">Reforço veio</button>
           </div>
         </div>
 
@@ -600,6 +617,98 @@
           <select id="estacao" required>
             <option value="" disabled selected>Selecione</option>
           </select>
+        </div>
+      </div>
+    </fieldset>
+
+    <fieldset id="fieldsetRemanejamento" hidden>
+      <legend id="legendRemanejamento">Remanejamento</legend>
+      <div class="stack">
+        <div id="camposRemanejado" class="stack" hidden>
+          <div>
+            <label for="estacaoDestino">Estação para onde fui</label>
+            <select id="estacaoDestino">
+              <option value="" disabled selected>Selecione</option>
+            </select>
+          </div>
+          <div>
+            <label id="lblPolicial1">1º policial da equipe</label>
+            <div class="row two">
+              <div>
+                <label for="policial1Graduacao">Graduação</label>
+                <select id="policial1Graduacao">
+                <option value="Sd PM">Sd PM</option>
+                <option value="Cb PM">Cb PM</option>
+                <option value="3º Sgt PM">3º Sgt PM</option>
+                <option value="2º Sgt PM">2º Sgt PM</option>
+                <option value="1º Sgt PM">1º Sgt PM</option>
+                </select>
+              </div>
+              <div>
+                <label for="policial1RE">RE</label>
+                <input type="text" id="policial1RE" inputmode="numeric" autocomplete="off" placeholder="143878-6">
+              </div>
+            </div>
+            <div>
+              <label for="policial1Nome">Nome de guerra ou QRA</label>
+              <input type="text" id="policial1Nome" autocomplete="off" placeholder="Sales">
+            </div>
+          </div>
+          <div>
+            <label id="lblPolicial2">2º policial da equipe</label>
+            <div class="row two">
+              <div>
+                <label for="policial2Graduacao">Graduação</label>
+                <select id="policial2Graduacao">
+                <option value="Sd PM">Sd PM</option>
+                <option value="Cb PM">Cb PM</option>
+                <option value="3º Sgt PM">3º Sgt PM</option>
+                <option value="2º Sgt PM">2º Sgt PM</option>
+                <option value="1º Sgt PM">1º Sgt PM</option>
+                </select>
+              </div>
+              <div>
+                <label for="policial2RE">RE</label>
+                <input type="text" id="policial2RE" inputmode="numeric" autocomplete="off" placeholder="154150-1">
+              </div>
+            </div>
+            <div>
+              <label for="policial2Nome">Nome de guerra ou QRA</label>
+              <input type="text" id="policial2Nome" autocomplete="off" placeholder="Fábio Silva">
+            </div>
+          </div>
+        </div>
+
+        <div id="camposReforco" class="stack" hidden>
+          <div>
+            <label id="lblReforco">Policial que veio</label>
+            <div class="row two">
+              <div>
+                <label for="reforcoGraduacao">Graduação</label>
+                <select id="reforcoGraduacao">
+                <option value="Sd PM">Sd PM</option>
+                <option value="Cb PM">Cb PM</option>
+                <option value="3º Sgt PM">3º Sgt PM</option>
+                <option value="2º Sgt PM">2º Sgt PM</option>
+                <option value="1º Sgt PM">1º Sgt PM</option>
+                </select>
+              </div>
+              <div>
+                <label for="reforcoRE">RE</label>
+                <input type="text" id="reforcoRE" inputmode="numeric" autocomplete="off" placeholder="154150-1">
+              </div>
+            </div>
+            <div>
+              <label for="reforcoNome">Nome de guerra ou QRA</label>
+              <input type="text" id="reforcoNome" autocomplete="off" placeholder="Fábio Silva">
+            </div>
+          </div>
+          <div>
+            <label for="estacaoOrigem">Estação de onde ele veio</label>
+            <select id="estacaoOrigem">
+              <option value="" disabled selected>Selecione</option>
+            </select>
+          </div>
         </div>
       </div>
     </fieldset>
@@ -710,13 +819,17 @@ const STATIONS = [
   { name: "SÉ", title: "Sé" },
 ];
 
-const estacaoSelect = document.getElementById('estacao');
-STATIONS.forEach(st => {
-  const opt = document.createElement('option');
-  opt.value = st.name;
-  opt.textContent = `METRÔ ${st.name}`;
-  estacaoSelect.appendChild(opt);
-});
+function popularEstacoes(select) {
+  STATIONS.forEach(st => {
+    const opt = document.createElement('option');
+    opt.value = st.name;
+    opt.textContent = `METRÔ ${st.name}`;
+    select.appendChild(opt);
+  });
+}
+popularEstacoes(document.getElementById('estacao'));
+popularEstacoes(document.getElementById('estacaoDestino'));
+popularEstacoes(document.getElementById('estacaoOrigem'));
 
 function formatDate(iso) {
   const [y, m, d] = iso.split('-').map(Number);
@@ -737,11 +850,18 @@ document.getElementById('data').addEventListener('change', updateAnoSuffix);
 
 // --- Alterna entre "Compareceu ao serviço" e "Falta ao serviço" ---
 let tipoDocumento = 'relatorio'; // 'relatorio' | 'parte'
+// Só vale para o Relatório: parceiro veio normalmente, ou faltou e eu fui remanejado, ou faltou e veio reforço pra mim.
+let situacaoRelatorio = 'compareceu'; // 'compareceu' | 'remanejado' | 'reforco'
 
-// Decide o que aparece na tela conforme o tipo de documento:
-// Relatório = parceiro compareceu; Parte de Falta = policial que faltou.
+// Decide o que aparece na tela conforme o tipo de documento e a situação:
+// Relatório+compareceu = parceiro compareceu; Relatório+remanejado/reforço e Parte de Falta = policial que faltou.
 function atualizarLayout() {
   const ehRelatorio = tipoDocumento === 'relatorio';
+  const situacaoAtualEhCompareceu = situacaoRelatorio === 'compareceu';
+  const ehRemanejado = ehRelatorio && situacaoRelatorio === 'remanejado';
+  const ehReforco = ehRelatorio && situacaoRelatorio === 'reforco';
+  // campos do policial que faltou aparecem tanto na Parte de Falta quanto no Relatório de falta (remanejado/reforço)
+  const mostrarFalta = !ehRelatorio || !situacaoAtualEhCompareceu;
 
   // seletor de tipo de documento
   document.getElementById('segRelatorio').classList.toggle('active', ehRelatorio);
@@ -755,16 +875,40 @@ function atualizarLayout() {
   document.getElementById('numDoc').required = ehRelatorio;
   document.getElementById('numeroParte').required = !ehRelatorio;
 
-  // parceiro que compareceu x policial que faltou
-  document.getElementById('camposCompareceu').hidden = !ehRelatorio;
-  document.getElementById('camposFalta').hidden = ehRelatorio;
-  document.getElementById('legendParceiro').textContent = ehRelatorio ? 'Parceiro de serviço' : 'Policial que faltou';
+  // seletor de situação do relatório (só existe dentro do Relatório)
+  document.getElementById('grupoSituacaoRelatorio').hidden = !ehRelatorio;
+  document.getElementById('segCompareceu').classList.toggle('active', situacaoAtualEhCompareceu);
+  document.getElementById('segRemanejado').classList.toggle('active', situacaoRelatorio === 'remanejado');
+  document.getElementById('segReforco').classList.toggle('active', situacaoRelatorio === 'reforco');
+  document.getElementById('segCompareceu').setAttribute('aria-pressed', String(situacaoAtualEhCompareceu));
+  document.getElementById('segRemanejado').setAttribute('aria-pressed', String(situacaoRelatorio === 'remanejado'));
+  document.getElementById('segReforco').setAttribute('aria-pressed', String(situacaoRelatorio === 'reforco'));
 
-  document.getElementById('parceiroRE').required = ehRelatorio;
-  document.getElementById('parceiroNome').required = ehRelatorio;
-  document.getElementById('faltaRE').required = !ehRelatorio;
-  document.getElementById('faltaNomeCompleto').required = !ehRelatorio;
-  document.getElementById('faltaPertencenteA').required = !ehRelatorio;
+  // fieldset com os detalhes do remanejamento/reforço
+  document.getElementById('fieldsetRemanejamento').hidden = !(ehRemanejado || ehReforco);
+  document.getElementById('camposRemanejado').hidden = !ehRemanejado;
+  document.getElementById('camposReforco').hidden = !ehReforco;
+  document.getElementById('legendRemanejamento').textContent = ehReforco ? 'Reforço que veio' : 'Fui remanejado para';
+
+  document.getElementById('estacaoDestino').required = ehRemanejado;
+  document.getElementById('policial1RE').required = ehRemanejado;
+  document.getElementById('policial1Nome').required = ehRemanejado;
+  document.getElementById('policial2RE').required = ehRemanejado;
+  document.getElementById('policial2Nome').required = ehRemanejado;
+  document.getElementById('reforcoRE').required = ehReforco;
+  document.getElementById('reforcoNome').required = ehReforco;
+  document.getElementById('estacaoOrigem').required = ehReforco;
+
+  // parceiro que compareceu x policial que faltou
+  document.getElementById('camposCompareceu').hidden = mostrarFalta;
+  document.getElementById('camposFalta').hidden = !mostrarFalta;
+  document.getElementById('legendParceiro').textContent = mostrarFalta ? 'Policial que faltou' : 'Parceiro de serviço';
+
+  document.getElementById('parceiroRE').required = !mostrarFalta;
+  document.getElementById('parceiroNome').required = !mostrarFalta;
+  document.getElementById('faltaRE').required = mostrarFalta;
+  document.getElementById('faltaNomeCompleto').required = mostrarFalta;
+  document.getElementById('faltaPertencenteA').required = mostrarFalta;
 }
 
 function escolherTipoDocumento(tipo) {
@@ -772,8 +916,17 @@ function escolherTipoDocumento(tipo) {
   atualizarLayout();
 }
 
+function escolherSituacao(situacao) {
+  situacaoRelatorio = situacao;
+  atualizarLayout();
+}
+
 document.getElementById('segRelatorio').addEventListener('click', () => escolherTipoDocumento('relatorio'));
 document.getElementById('segParte').addEventListener('click', () => escolherTipoDocumento('parte'));
+
+document.getElementById('segCompareceu').addEventListener('click', () => escolherSituacao('compareceu'));
+document.getElementById('segRemanejado').addEventListener('click', () => escolherSituacao('remanejado'));
+document.getElementById('segReforco').addEventListener('click', () => escolherSituacao('reforco'));
 
 // --- Reset completo do site (chamado no carregamento e toda vez que a aba/atalho é reaberto) ---
 function resetFormState() {
@@ -793,7 +946,19 @@ function resetFormState() {
   document.getElementById('faltaPertencenteA').value = '';
   document.getElementById('numeroParte').value = '';
   document.getElementById('statusParte').textContent = '';
+  document.getElementById('estacaoDestino').value = '';
+  document.getElementById('policial1Graduacao').value = 'Sd PM';
+  document.getElementById('policial1RE').value = '';
+  document.getElementById('policial1Nome').value = '';
+  document.getElementById('policial2Graduacao').value = 'Sd PM';
+  document.getElementById('policial2RE').value = '';
+  document.getElementById('policial2Nome').value = '';
+  document.getElementById('reforcoGraduacao').value = 'Sd PM';
+  document.getElementById('reforcoRE').value = '';
+  document.getElementById('reforcoNome').value = '';
+  document.getElementById('estacaoOrigem').value = '';
   tipoDocumento = 'relatorio';
+  situacaoRelatorio = 'compareceu';
   atualizarLayout();
   updateAnoSuffix();
   document.getElementById('status').textContent = '';
@@ -1234,39 +1399,15 @@ function quebrarHelv(texto, larguraMax, tamanho) {
   return linhas;
 }
 
-function desenharRelatorio(doc, d) {
+// Assinatura + nome + cargo do Relatório, sempre no mesmo espaçamento a partir da linha do telefone
+// (usada nas 3 situações: parceiro compareceu, fui remanejado, reforço veio).
+function desenharAssinaturaRelatorio(doc, telefoneY) {
   const OFFSET = 0.8;
-
   function line(x, top, size, bold, text) {
     doc.setFont('times', bold ? 'bold' : 'normal');
     doc.setFontSize(size);
     doc.text(text, x, top + size * OFFSET);
   }
-
-  line(56.7, 45.7, 14, true, 'SECRETARIA DA SEGURANÇA PÚBLICA');
-  line(56.7, 68.4, 14, true, 'POLÍCIA MILITAR DO ESTADO DE SÃO PAULO');
-
-  line(56.7, 92.7, 12, false, `São Paulo, ${d.dataFormatada}.`);
-  line(56.7, 115.3, 12, false, `RELATÓRIO Nº CPAM1-${d.numDoc}/301.1/${d.anoSuffix}`);
-  line(56.7, 138.0, 12, false, `Do Cmt Op. DEJEM "METRÔ ${d.estacao}"`);
-  line(56.7, 160.7, 12, false, 'Ao Sr. Ch Div Op CPA/M-1.');
-  line(56.7, 183.4, 12, false, 'Assunto: Encaminhamento de documentação.');
-  line(56.7, 206.0, 12, false, `Data da DEJEM: ${d.dataFormatada}`);
-  line(56.7, 228.7, 12, false, `Horário: ${d.horaInicio} às ${d.horaFim}`);
-  line(56.7, 251.4, 12, false, `Número da ID: ${d.idServico}`);
-
-  doc.setFont('times', 'normal');
-  doc.setFontSize(12);
-
-  const p1a = `1. Informo a V.S.ª que nesta data, o serviço da Atividade DEJEM Metrô ${d.estacaoTitle}, no horário das`;
-  const p1b = `${d.hiH}h${d.hiM}min às ${d.hfH}h${d.hfM}min, transcorreu sem novidades.`;
-  doc.text(p1a, 56.7, 333.6 + 12 * OFFSET);
-  doc.text(p1b, 56.7, 347.4 + 12 * OFFSET);
-
-  line(56.7, 375.0, 12, false, '2. De Serviço:');
-  line(56.7, 402.6, 12, false, `2. 1. Cb PM 142113-1 Costa e ${d.parceiro}.`);
-  const telefoneY = 430.2;
-  line(56.7, telefoneY, 12, false, '3. Telefone do Cmt: (11) 94769-0037.');
 
   const nameText = 'CB PM 142113-1 THIAGO SILVA COSTA';
   const cmtText = 'Cmt da DEJEM';
@@ -1290,6 +1431,80 @@ function desenharRelatorio(doc, d) {
   const cmtWidth = doc.getTextWidth(cmtText);
   const cmtX = nameCenterX - cmtWidth / 2;
   line(cmtX, cmtY, 12, false, cmtText);
+}
+
+function desenharRelatorio(doc, d) {
+  const OFFSET = 0.8;
+  const MAX_LARGURA = 481.88; // da margem esquerda (56.7) até a direita (538.58)
+  const ALTURA_LINHA = 13.8;
+
+  function line(x, top, size, bold, text) {
+    doc.setFont('times', bold ? 'bold' : 'normal');
+    doc.setFontSize(size);
+    doc.text(text, x, top + size * OFFSET);
+  }
+
+  line(56.7, 45.7, 14, true, 'SECRETARIA DA SEGURANÇA PÚBLICA');
+  line(56.7, 68.4, 14, true, 'POLÍCIA MILITAR DO ESTADO DE SÃO PAULO');
+
+  line(56.7, 92.7, 12, false, `São Paulo, ${d.dataFormatada}.`);
+  line(56.7, 115.3, 12, false, `RELATÓRIO Nº CPAM1-${d.numDoc}/301.1/${d.anoSuffix}`);
+  line(56.7, 138.0, 12, false, `Do Cmt Op. DEJEM "METRÔ ${d.estacao}"`);
+  line(56.7, 160.7, 12, false, 'Ao Sr. Ch Div Op CPA/M-1.');
+  line(56.7, 183.4, 12, false, 'Assunto: Encaminhamento de documentação.');
+  line(56.7, 206.0, 12, false, `Data da DEJEM: ${d.dataFormatada}`);
+  line(56.7, 228.7, 12, false, `Horário: ${d.horaInicio} às ${d.horaFim}`);
+  line(56.7, 251.4, 12, false, `Número da ID: ${d.idServico}`);
+
+  doc.setFont('times', 'normal');
+  doc.setFontSize(12);
+
+  const situacao = d.situacao || 'compareceu';
+
+  if (situacao === 'compareceu') {
+    const p1a = `1. Informo a V.S.ª que nesta data, o serviço da Atividade DEJEM Metrô ${d.estacaoTitle}, no horário das`;
+    const p1b = `${d.hiH}h${d.hiM}min às ${d.hfH}h${d.hfM}min, transcorreu sem novidades.`;
+    doc.text(p1a, 56.7, 333.6 + 12 * OFFSET);
+    doc.text(p1b, 56.7, 347.4 + 12 * OFFSET);
+
+    line(56.7, 375.0, 12, false, '2. De Serviço:');
+    line(56.7, 402.6, 12, false, `2. 1. Cb PM 142113-1 Costa e ${d.parceiro}.`);
+    const telefoneY = 430.2;
+    line(56.7, telefoneY, 12, false, '3. Telefone do Cmt: (11) 94769-0037.');
+
+    desenharAssinaturaRelatorio(doc, telefoneY);
+    return;
+  }
+
+  // Falta ao serviço (fui remanejado ou veio reforço): item 2 explica o caso e o layout
+  // se ajusta sozinho conforme o tamanho do texto (estação e nomes variam).
+  const p1a = `1. Informo a V.S.ª que nesta data, o serviço da Atividade DEJEM Metrô ${d.estacaoTitle}, no horário das`;
+  const p1b = `${d.hiH}h${d.hiM}min às ${d.hfH}h${d.hfM}min, transcorreu com as seguintes novidades.`;
+  doc.text(p1a, 56.7, 333.6 + 12 * OFFSET);
+  doc.text(p1b, 56.7, 347.4 + 12 * OFFSET);
+
+  let item2Texto;
+  if (situacao === 'remanejado') {
+    item2Texto = `2. Devido à falta do ${d.faltaGrad} ${d.faltaNome}, pertencente ao ${d.faltaUnidade}, este policial militar foi remanejado para o Metrô ${d.destinoTitle}, para compor a equipe com o ${d.policial1Grad} ${d.policial1RE} ${d.policial1Nome} e o ${d.policial2Grad} ${d.policial2RE} ${d.policial2Nome}, conforme orientação do pessoal do respectivo metrô.`;
+  } else {
+    item2Texto = `2. Devido à falta do ${d.faltaGrad} ${d.faltaNome}, pertencente ao ${d.faltaUnidade}, o ${d.reforcoGrad} ${d.reforcoRE} ${d.reforcoNome}, foi remanejado do metrô ${d.origemTitle}, para compor a equipe, conforme orientação do pessoal do respectivo metrô.`;
+  }
+
+  doc.setFont('times', 'normal');
+  doc.setFontSize(12);
+  let y = 375.0;
+  const linhasItem2 = doc.splitTextToSize(item2Texto, MAX_LARGURA);
+  linhasItem2.forEach((t, i) => doc.text(t, 56.7, y + 12 * OFFSET + i * ALTURA_LINHA));
+  y += (linhasItem2.length + 1) * ALTURA_LINHA;
+
+  line(56.7, y, 12, false, '3. De Serviço:');
+  y += ALTURA_LINHA * 2;
+  line(56.7, y, 12, false, '3. 1. Cb PM 142113-1 Costa.');
+  y += ALTURA_LINHA * 2;
+  const telefoneY = y;
+  line(56.7, telefoneY, 12, false, '4. Telefone do Cmt: (11) 94769-0037.');
+
+  desenharAssinaturaRelatorio(doc, telefoneY);
 }
 
 // Parte de Falta: segue o modelo Parte_Ass.pdf (Helvetica; cabeçalho nas mesmas posições do Relatório).
@@ -1374,14 +1589,50 @@ document.getElementById('form').addEventListener('submit', async function(e) {
     if (!ehParte) {
       const numDoc = document.getElementById('numDoc').value.trim();
       const anoSuffix = document.getElementById('anoSuffixInput').value.trim();
-      const parceiro = `${document.getElementById('parceiroGraduacao').value} ${document.getElementById('parceiroRE').value.trim()} ${document.getElementById('parceiroNome').value.trim()}`;
 
-      resumo = `Documento: Relatório\nData: ${dataFormatada}\nTurno: ${horaInicio} às ${horaFim}\nNúmero: CPAM1-${numDoc}/301.1/${anoSuffix}\nID: ${idServico}\nEstação: METRÔ ${estacaoObj.name}\nParceiro: ${parceiro}`;
-      fileName = `Relatorio_Ass_${idServico || 'servico'}.pdf`;
-      desenhar = (doc) => desenharRelatorio(doc, {
+      const dadosRelatorio = {
         dataFormatada, numDoc, anoSuffix, estacao: estacaoObj.name, estacaoTitle: estacaoObj.title,
-        horaInicio, horaFim, idServico, hiH, hiM, hfH, hfM, parceiro,
-      });
+        horaInicio, horaFim, idServico, hiH, hiM, hfH, hfM, situacao: situacaoRelatorio,
+      };
+
+      if (situacaoRelatorio === 'compareceu') {
+        const parceiro = `${document.getElementById('parceiroGraduacao').value} ${document.getElementById('parceiroRE').value.trim()} ${document.getElementById('parceiroNome').value.trim()}`;
+        dadosRelatorio.parceiro = parceiro;
+        resumo = `Documento: Relatório\nData: ${dataFormatada}\nTurno: ${horaInicio} às ${horaFim}\nNúmero: CPAM1-${numDoc}/301.1/${anoSuffix}\nID: ${idServico}\nEstação: METRÔ ${estacaoObj.name}\nParceiro: ${parceiro}`;
+      } else {
+        const faltaGrad = document.getElementById('faltaGraduacao').value;
+        const faltaNome = document.getElementById('faltaNomeCompleto').value.trim();
+        const faltaUnidade = document.getElementById('faltaPertencenteA').value.trim();
+        dadosRelatorio.faltaGrad = faltaGrad;
+        dadosRelatorio.faltaNome = faltaNome;
+        dadosRelatorio.faltaUnidade = faltaUnidade;
+
+        if (situacaoRelatorio === 'remanejado') {
+          const destinoValue = document.getElementById('estacaoDestino').value;
+          const destinoObj = STATIONS.find(s => s.name === destinoValue) || { name: destinoValue, title: destinoValue };
+          const policial1Grad = document.getElementById('policial1Graduacao').value;
+          const policial1RE = document.getElementById('policial1RE').value.trim();
+          const policial1Nome = document.getElementById('policial1Nome').value.trim();
+          const policial2Grad = document.getElementById('policial2Graduacao').value;
+          const policial2RE = document.getElementById('policial2RE').value.trim();
+          const policial2Nome = document.getElementById('policial2Nome').value.trim();
+          Object.assign(dadosRelatorio, { destinoTitle: destinoObj.title, policial1Grad, policial1RE, policial1Nome, policial2Grad, policial2RE, policial2Nome });
+
+          resumo = `Documento: Relatório (fui remanejado)\nData: ${dataFormatada}\nTurno: ${horaInicio} às ${horaFim}\nNúmero: CPAM1-${numDoc}/301.1/${anoSuffix}\nID: ${idServico}\nEstação original: METRÔ ${estacaoObj.name}\nFaltou: ${faltaGrad} ${faltaNome} (${faltaUnidade})\nFui para: METRÔ ${destinoObj.name}\nEquipe lá: ${policial1Grad} ${policial1RE} ${policial1Nome} e ${policial2Grad} ${policial2RE} ${policial2Nome}`;
+        } else {
+          const origemValue = document.getElementById('estacaoOrigem').value;
+          const origemObj = STATIONS.find(s => s.name === origemValue) || { name: origemValue, title: origemValue };
+          const reforcoGrad = document.getElementById('reforcoGraduacao').value;
+          const reforcoRE = document.getElementById('reforcoRE').value.trim();
+          const reforcoNome = document.getElementById('reforcoNome').value.trim();
+          Object.assign(dadosRelatorio, { origemTitle: origemObj.title, reforcoGrad, reforcoRE, reforcoNome });
+
+          resumo = `Documento: Relatório (reforço veio)\nData: ${dataFormatada}\nTurno: ${horaInicio} às ${horaFim}\nNúmero: CPAM1-${numDoc}/301.1/${anoSuffix}\nID: ${idServico}\nEstação: METRÔ ${estacaoObj.name}\nFaltou: ${faltaGrad} ${faltaNome} (${faltaUnidade})\nReforço: ${reforcoGrad} ${reforcoRE} ${reforcoNome} (veio de METRÔ ${origemObj.name})`;
+        }
+      }
+
+      fileName = `Relatorio_Ass_${idServico || 'servico'}.pdf`;
+      desenhar = (doc) => desenharRelatorio(doc, dadosRelatorio);
     } else {
       const numeroParte = document.getElementById('numeroParte').value.trim();
       const anoSuffix = document.getElementById('anoSuffixParte').value.trim();
@@ -1455,7 +1706,7 @@ resetFormState();
 // (o iPhone mantém o atalho da tela inicial "suspenso" em vez de recarregar sozinho,
 // então esse é o jeito de avisar que uma atualização está disponível sem precisar
 // remover e adicionar o atalho de novo)
-const CURRENT_VERSION = 'v1.35';
+const CURRENT_VERSION = 'v1.36';
 let operacaoEmAndamento = false;
 
 async function checkForUpdate() {
