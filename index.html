@@ -61,6 +61,7 @@
   v1.55 — Corrigido bug grave introduzido na v1.54: o site travava na tela cinza de carregamento e não abria de jeito nenhum (uma variável nova estava sendo usada antes de ser criada, o que quebrava todo o script logo no início)
   v1.56 — Ajuste em "Pesquisar Escala": não é possível pegar o PDF automaticamente da intranet da PM (o site do governo não permite; teria que ser feito por fora, sem o app poder ler o arquivo sozinho), mas agora ao voltar da aba que abriu o PDF a tela já rola sozinha até o campo "Escala para assinar", destacado, pronto pra você anexar; texto de ajuda explicando melhor o passo a passo (compartilhar → Salvar em Arquivos → voltar e anexar)
   v1.57 — Removido o "voltar pro topo" automático ao digitar em qualquer campo (a tela agora fica exatamente onde você estava); indicador de progresso nas próprias abas: um selo verde com "✓" aparece em "1. Relatório", "2. Assinar" e "3. Enviar" assim que cada etapa é concluída nesta sessão; campos de RE (parceiro, policial que faltou, remanejamento/reforço) agora formatam sozinhos no padrão 123456-7, aceitando só números e travando no tamanho certo; nova aba "Histórico de envios" (botão na aba Enviar) guardando data/hora, assunto, anexos e status (confirmado ou não) de cada e-mail mandado nesta sessão
+  v1.58 — Aviso bem visível de "MODO TESTE" ou "MODO REAL" na aba Enviar e no cartão de revisão, conferido direto no Apps Script (novo endpoint de status) antes de mostrar qualquer coisa — pra nunca mais restar dúvida se o envio vai só pro seu Gmail pessoal ou de verdade pro CPA/M-1, mesmo o texto de destinatário mostrando sempre o endereço oficial
 -->
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover, interactive-widget=resizes-content">
@@ -746,6 +747,43 @@
     overflow: auto;
   }
 
+  /* Aviso de modo teste/real do envio de e-mail */
+  .modo-envio-aviso {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    border-radius: 8px;
+    border: 1px solid var(--line);
+    padding: 10px 12px;
+    margin-bottom: 18px;
+    font-size: 13px;
+    line-height: 1.4;
+  }
+  .modo-envio-aviso::before {
+    content: '';
+    width: 8px;
+    height: 8px;
+    min-width: 8px;
+    border-radius: 50%;
+    background: currentColor;
+  }
+  .modo-envio-aviso.teste {
+    color: var(--accent-soft);
+    border-color: var(--accent-soft);
+    background: rgba(34, 230, 160, 0.08);
+  }
+  .modo-envio-aviso.real {
+    color: #ff9188;
+    border-color: #ff9188;
+    background: rgba(255, 91, 76, 0.1);
+    font-weight: 700;
+  }
+  .modo-envio-aviso.desconhecido {
+    color: #d9a441;
+    border-color: #d9a441;
+    background: rgba(217, 164, 65, 0.1);
+  }
+
   /* Botão "Histórico de envios" e o selo com a contagem */
   .historico-abrir-btn {
     display: flex;
@@ -932,7 +970,7 @@
 </div>
 <div class="wrap">
   <header>
-    <span class="version-tag">v1.57</span>
+    <span class="version-tag">v1.58</span>
     <div class="header-brand">
       <img src="data:image/png;base64,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" alt="" class="header-logo">
       <div>
@@ -1247,6 +1285,10 @@
       <span class="historico-badge" id="historicoBadge" hidden>0</span>
     </button>
 
+    <div class="modo-envio-aviso" id="modoEnvioAviso" hidden>
+      <span id="modoEnvioTexto"></span>
+    </div>
+
     <fieldset>
       <legend>Documentos para anexar</legend>
       <div class="stack" id="listaAnexos">
@@ -1314,6 +1356,9 @@
 <div id="revisaoEmailOverlay" class="confirm-overlay" hidden>
   <div class="confirm-box revisao-box" role="alertdialog" aria-modal="true" aria-labelledby="revisaoTitulo">
     <p class="revisao-titulo" id="revisaoTitulo">Conferir antes de enviar</p>
+    <div class="modo-envio-aviso" id="revisaoModoEnvioAviso" hidden>
+      <span id="revisaoModoEnvioTexto"></span>
+    </div>
     <div class="revisao-linha">
       <span class="revisao-rotulo">Para</span>
       <span class="revisao-valor" id="revisaoPara"></span>
@@ -1555,6 +1600,11 @@ function resetFormState() {
   ultimoAssuntoAuto = null;
   ultimaMensagemAuto = null;
   emailEnviadoConfirmado = false;
+  modoTesteAtivo = null;
+  const modoEnvioAviso = document.getElementById('modoEnvioAviso');
+  if (modoEnvioAviso) modoEnvioAviso.hidden = true;
+  const revisaoModoEnvioAviso = document.getElementById('revisaoModoEnvioAviso');
+  if (revisaoModoEnvioAviso) revisaoModoEnvioAviso.hidden = true;
   if (typeof atualizarChecklistAnexos === 'function') atualizarChecklistAnexos();
   const assuntoEmail = document.getElementById('assuntoEmail');
   if (assuntoEmail) assuntoEmail.value = '';
@@ -1773,6 +1823,7 @@ function montarMensagemPadrao() {
 
 function prepararAbaEnviarEmail() {
   atualizarChecklistAnexos();
+  atualizarAvisoModoEnvio();
   const assuntoEl = document.getElementById('assuntoEmail');
   const mensagemEl = document.getElementById('mensagemEmail');
   const novoAssunto = montarAssuntoPadrao();
@@ -2058,6 +2109,46 @@ function gerarReqId() {
   return 'r' + Date.now() + '_' + Math.random().toString(36).slice(2);
 }
 
+// Confere no próprio Apps Script se o envio está em modo teste (só cai no seu
+// Gmail pessoal) ou modo real (vai de verdade pro CPA/M-1), pra mostrar isso
+// bem claro na tela antes de qualquer envio — em vez de você ter que confiar
+// só no texto fixo "Para" do cartão de revisão.
+let modoTesteAtivo = null; // null = ainda não conferido, true = modo teste, false = modo real
+
+async function conferirModoEnvio() {
+  try {
+    const resp = await fetch(`${APPS_SCRIPT_URL}?action=status`);
+    if (!resp.ok) return null;
+    const data = await resp.json();
+    return typeof data.modoTeste === 'boolean' ? data.modoTeste : null;
+  } catch (err) {
+    return null;
+  }
+}
+
+function renderAvisoModoEnvio(prefixoId) {
+  const aviso = document.getElementById(prefixoId + 'Aviso');
+  const texto = document.getElementById(prefixoId + 'Texto');
+  if (!aviso || !texto) return;
+  aviso.classList.remove('teste', 'real', 'desconhecido');
+  if (modoTesteAtivo === true) {
+    aviso.classList.add('teste');
+    texto.textContent = 'MODO TESTE — este e-mail vai só para o seu Gmail pessoal, não chega no CPA/M-1.';
+  } else if (modoTesteAtivo === false) {
+    aviso.classList.add('real');
+    texto.textContent = 'MODO REAL — este e-mail vai de verdade para o CPA/M-1 oficial.';
+  } else {
+    aviso.classList.add('desconhecido');
+    texto.textContent = 'Não consegui confirmar agora se o envio está em modo teste ou real — confira no Apps Script antes de enviar.';
+  }
+  aviso.hidden = false;
+}
+
+async function atualizarAvisoModoEnvio() {
+  modoTesteAtivo = await conferirModoEnvio();
+  renderAvisoModoEnvio('modoEnvio');
+}
+
 function mensagemErroPlanilha(err) {
   if (typeof navigator !== 'undefined' && navigator.onLine === false) {
     return 'Sem conexão com a internet. Verifique o Wi-Fi/dados e tente de novo.';
@@ -2161,7 +2252,13 @@ function confirmarCustom(mensagem, opcoes) {
 
 // Tela de revisão final antes de enviar o e-mail: mostra destinatário, assunto,
 // anexos (como chips) e um preview da mensagem, num cartão só.
-function revisarEnvioEmail({ destinatario, assunto, mensagem, anexos }) {
+async function revisarEnvioEmail({ destinatario, assunto, mensagem, anexos }) {
+  // Confere de novo, na hora, se é modo teste ou modo real — é a última checagem
+  // antes do toque em "Confirmar e enviar".
+  modoTesteAtivo = await conferirModoEnvio();
+  renderAvisoModoEnvio('modoEnvio');
+  renderAvisoModoEnvio('revisaoModoEnvio');
+
   return new Promise((resolve) => {
     const overlay = document.getElementById('revisaoEmailOverlay');
     document.getElementById('revisaoPara').textContent = destinatario;
@@ -2699,7 +2796,7 @@ resetFormState();
 // (o iPhone mantém o atalho da tela inicial "suspenso" em vez de recarregar sozinho,
 // então esse é o jeito de avisar que uma atualização está disponível sem precisar
 // remover e adicionar o atalho de novo)
-const CURRENT_VERSION = 'v1.57';
+const CURRENT_VERSION = 'v1.58';
 let operacaoEmAndamento = false;
 
 async function checkForUpdate() {
