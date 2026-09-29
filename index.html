@@ -70,6 +70,7 @@
   v1.64 — Corrigido: clicar no "×" de um destinatário agora pede confirmação antes de remover ("Remover [e-mail] da lista de destinatários?"), pra não apagar sem querer
   v1.65 — Campos de nome (nome de guerra/QRA e nome completo, de todo mundo: parceiro, quem faltou, dupla do remanejamento, reforço) agora só aceitam letras, espaço, hífen e apóstrofo — números e outros símbolos são bloqueados ao digitar
   v1.66 — Corrigido: "Pesquisar Escala" agora confirma se o AnyConnect já está conectado antes de abrir a página (senão avisa e não fica piscando o aviso de "anexar escala" à toa, já que sem VPN a página nem carrega). Campos de nome agora deixam a primeira letra de cada palavra maiúscula sozinho. Depois de gerar o PDF aparece o mesmo check verde animado do envio de e-mail. Novo botão "Compartilhar" ao lado do "Ver PDF" (Relatório/Parte/Escala) pra mandar direto por WhatsApp/AirDrop/Arquivos. Aviso do navegador se tentar fechar a aba com campo preenchido mas sem gerar o PDF ainda. jsPDF e pdf-lib agora só carregam na hora de gerar/assinar, deixando a abertura do app mais rápida
+  v1.67 — Removido o "Duplicar último relatório" (aviso e botão no topo da aba Relatório) que tinha entrado na v1.62
 -->
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover, interactive-widget=resizes-content">
@@ -469,22 +470,6 @@
   }
   .offline-banner::before {
     content: '\26A0';
-    flex-shrink: 0;
-  }
-  .duplicar-aviso {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 10px;
-    padding: 10px 14px;
-    border: 1px dashed var(--accent-soft);
-    border-radius: 8px;
-    background: var(--paper-dark);
-    font-family: 'Courier New', monospace;
-    font-size: 12px;
-    color: var(--ink-soft);
-  }
-  .duplicar-aviso button {
     flex-shrink: 0;
   }
   [hidden] { display: none !important; }
@@ -1038,7 +1023,7 @@
 </div>
 <div class="wrap">
   <header>
-    <span class="version-tag">v1.66</span>
+    <span class="version-tag">v1.67</span>
     <div class="header-brand">
       <img src="data:image/png;base64,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" alt="" class="header-logo">
       <div>
@@ -1058,10 +1043,6 @@
   </div>
 
   <div id="panel-relatorio" class="panel">
-  <div class="duplicar-aviso" id="duplicarAviso" hidden>
-    <span>Repetir estação/ID/situação do último relatório desta sessão?</span>
-    <button type="button" id="duplicarUltimoBtn" class="secondary-btn">Duplicar</button>
-  </div>
   <form id="form">
     <fieldset>
       <legend>Data e horário</legend>
@@ -1714,16 +1695,6 @@ document.getElementById('segCompareceu').addEventListener('click', () => escolhe
 document.getElementById('segRemanejado').addEventListener('click', () => escolherSituacao('remanejado'));
 document.getElementById('segReforco').addEventListener('click', () => escolherSituacao('reforco'));
 
-document.getElementById('duplicarUltimoBtn').addEventListener('click', function() {
-  if (!ultimoRelatorioCampos) return;
-  escolherTipoDocumento('relatorio');
-  document.getElementById('turno').value = ultimoRelatorioCampos.turno;
-  document.getElementById('estacao').value = ultimoRelatorioCampos.estacaoValue;
-  document.getElementById('idServico').value = ultimoRelatorioCampos.idServico;
-  escolherSituacao(ultimoRelatorioCampos.situacao);
-  vibrarSuave();
-});
-
 // --- Reset completo do site (chamado no carregamento e toda vez que a aba/atalho é reaberto) ---
 function resetFormState() {
   // Relatório DEJEM
@@ -1778,8 +1749,6 @@ function resetFormState() {
 
   // Enviar E-mail
   ultimosDocumentos = { relatorio: null, parte: null, escala: null };
-  ultimoRelatorioCampos = null;
-  if (typeof atualizarBotaoDuplicar === 'function') atualizarBotaoDuplicar();
   ultimoAssuntoAuto = null;
   ultimaMensagemAuto = null;
   emailEnviadoConfirmado = false;
@@ -1855,12 +1824,6 @@ function vibrarSuave(padrao) {
 
 // --- Enviar E-mail: guarda os últimos PDFs gerados nesta sessão, prontos pra anexar ---
 let ultimosDocumentos = { relatorio: null, parte: null, escala: null };
-let ultimoRelatorioCampos = null; // { data, turno, idServico, estacaoValue, situacao } do último Relatório gerado nesta sessão
-
-function atualizarBotaoDuplicar() {
-  const aviso = document.getElementById('duplicarAviso');
-  if (aviso) aviso.hidden = !ultimoRelatorioCampos;
-}
 let ultimoAssuntoAuto = null;
 let ultimaMensagemAuto = null;
 let emailEnviadoConfirmado = false; // pra marcar a etapa "3. Enviar" como concluída no indicador de progresso
@@ -3129,10 +3092,6 @@ document.getElementById('form').addEventListener('submit', async function(e) {
       base64: pdfBase64, fileName, geradoEm: new Date(),
       situacao: ehParte ? null : situacaoRelatorio,
     };
-    if (!ehParte) {
-      ultimoRelatorioCampos = { turno: document.getElementById('turno').value, idServico, estacaoValue, situacao: situacaoRelatorio };
-      atualizarBotaoDuplicar();
-    }
     atualizarChecklistAnexos();
     statusEl.textContent = '';
     mostrarSucesso('sucessoPdf', `PDF pronto: ${fileName}. Vá em "Enviar E-mail" pra conferir e mandar.`);
@@ -3168,7 +3127,7 @@ resetFormState();
 // (o iPhone mantém o atalho da tela inicial "suspenso" em vez de recarregar sozinho,
 // então esse é o jeito de avisar que uma atualização está disponível sem precisar
 // remover e adicionar o atalho de novo)
-const CURRENT_VERSION = 'v1.66';
+const CURRENT_VERSION = 'v1.67';
 let operacaoEmAndamento = false;
 
 async function checkForUpdate() {
