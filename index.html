@@ -55,6 +55,8 @@
   v1.49 — Corrigido: se você abrisse a aba "Enviar E-mail" antes de preencher Estação/ID (ou antes de gerar o documento), o assunto e a mensagem ficavam travados sem essa informação pra sempre, mesmo depois de preencher; agora eles são atualizados sozinhos toda vez que você entra na aba, a não ser que você já tenha editado o texto à mão (nesse caso o que você escreveu não é apagado)
   v1.50 — Regra obrigatória pra enviar e-mail: a escala assinada agora é exigida em qualquer envio (sem ela, o botão "Enviar e-mail" recusa e avisa); se o Relatório gerado for da situação "Fui remanejado" ou "Fui reforçado", a Parte de Falta também passa a ser obrigatória junto (situação "Parceiro veio" continua exigindo só Relatório + Escala)
   v1.51 — Removido o zoom automático do iOS ao tocar nos campos de texto (aumentado o tamanho da fonte dos campos pra 16px, que é o limite que o Safari usa pra decidir se dá zoom sozinho) e travado o zoom por pinça também, já que o site não precisa disso e só deixava mais lento
+  v1.52 — Documentos obrigatórios que ainda faltam na aba "Enviar E-mail" (Escala sempre; Parte de Falta quando o Relatório é "Fui remanejado"/"Fui reforçado") agora aparecem em vermelho, com uma barrinha lateral pulsando e a palavra "faltando" em destaque, pra ficar visualmente óbvio o que falta antes mesmo de tentar enviar
+  v1.53 — Leva de melhorias visuais: barra de progresso "X de Y documentos prontos" no topo da aba "Enviar E-mail"; tela de revisão final antes de enviar (mostra destinatário, assunto, anexos e preview da mensagem num cartão só, no lugar do popup de texto simples); check verde animado de confirmação depois que o e-mail é enviado e confirmado em Enviados; vibração leve ao confirmar Gerar PDF/Assinar/Enviar (só funciona em Android, no iPhone o Safari ignora); tela de carregamento (skeleton) na abertura do site; abas renomeadas com numeração "1. Relatório", "2. Assinar", "3. Enviar" pra reforçar a ordem do fluxo; corrigido bug de layout em que a 3ª aba quebrava linha errado (o CSS só tinha 2 colunas pra 3 abas)
 -->
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
@@ -297,9 +299,11 @@
     border-radius: 6px;
     cursor: pointer;
     letter-spacing: 0.01em;
+    box-shadow: 0 2px 0 rgba(0, 0, 0, 0.18);
+    transition: transform 0.12s ease, box-shadow 0.12s ease, background 0.15s ease;
   }
   button:hover { background: var(--accent-soft); }
-  button:active { transform: translateY(1px); }
+  button:active { transform: translateY(2px); box-shadow: 0 0 0 rgba(0, 0, 0, 0.18); }
   .hint {
     font-size: 12px;
     color: var(--ink-soft);
@@ -340,7 +344,7 @@
   }
   .tabs {
     display: grid;
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: 1fr 1fr 1fr;
     gap: 8px;
     margin-bottom: 22px;
   }
@@ -350,12 +354,14 @@
     background: var(--paper-dark);
     color: var(--ink-soft);
     font-family: Georgia, 'Times New Roman', serif;
-    font-size: 14px;
+    font-size: 13px;
     font-weight: 700;
-    padding: 11px 10px;
+    padding: 11px 6px;
     border-radius: 6px;
     cursor: pointer;
+    transition: transform 0.12s ease, background 0.15s ease;
   }
+  .tab-btn:active { transform: translateY(2px); }
   .tab-btn.active {
     background: var(--accent);
     color: var(--white);
@@ -382,8 +388,10 @@
     padding: 10px 14px;
     border-radius: 6px;
     cursor: pointer;
+    transition: transform 0.12s ease, background 0.15s ease;
   }
   .secondary-btn:hover { background: var(--paper-dark); }
+  .secondary-btn:active { transform: translateY(2px); }
   .secondary-btn:disabled { opacity: 0.6; cursor: default; }
   .danger-btn {
     border-color: #ff6b5b;
@@ -496,11 +504,22 @@
     display: flex;
     align-items: center;
     gap: 10px;
-    padding: 10px 12px;
+    padding: 10px 12px 10px 16px;
     border: 1px solid var(--line);
     border-radius: 6px;
     background: var(--white);
     flex-wrap: wrap;
+    position: relative;
+    overflow: hidden;
+    transition: border-color 0.25s ease, background 0.25s ease;
+  }
+  .check-row::before {
+    content: '';
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    width: 4px;
+    background: var(--line);
+    transition: background 0.25s ease, opacity 0.25s ease;
   }
   .check-row input[type="checkbox"] {
     width: 18px;
@@ -529,15 +548,51 @@
   }
   .check-row .ver-pdf-btn:disabled { opacity: 0.4; cursor: default; text-decoration: none; }
   .check-row .check-status {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
     font-family: 'Courier New', monospace;
     font-size: 11px;
     color: var(--ink-soft);
     text-align: right;
     flex-shrink: 0;
+    transition: color 0.25s ease;
   }
+  .check-row.disponivel::before { background: var(--accent); }
   .check-row.disponivel .check-status { color: var(--accent-soft); }
   .check-row.indisponivel { opacity: 0.55; }
   .check-row.indisponivel .check-label { cursor: default; }
+  .check-row.faltando {
+    border-color: rgba(255, 107, 91, 0.5);
+    background: rgba(255, 107, 91, 0.06);
+  }
+  .check-row.faltando::before {
+    background: #ff6b5b;
+    animation: faltandoPulso 1.6s ease-in-out infinite;
+  }
+  .check-row.faltando .check-label { color: #ff9188; }
+  .check-row.faltando .check-status {
+    color: #ff6b5b;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+  }
+  .check-row.faltando .check-status::before {
+    content: '';
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #ff6b5b;
+    flex-shrink: 0;
+    animation: faltandoPulso 1.6s ease-in-out infinite;
+  }
+  @keyframes faltandoPulso {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.3; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .check-row.faltando::before,
+    .check-row.faltando .check-status::before { animation: none; }
+  }
   .planilha-primary {
     width: 100%;
     text-align: center;
@@ -598,12 +653,152 @@
     font-family: Georgia, 'Times New Roman', serif;
     font-size: 14px;
   }
+
+  /* Barra de progresso dos documentos (aba Enviar E-mail) */
+  .progresso-docs { display: grid; gap: 6px; }
+  .progresso-docs-label {
+    font-family: 'Courier New', monospace;
+    font-size: 12px;
+    color: var(--ink-soft);
+  }
+  .progresso-docs-track {
+    height: 6px;
+    border-radius: 4px;
+    background: var(--paper-dark);
+    border: 1px solid var(--line);
+    overflow: hidden;
+  }
+  .progresso-docs-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--accent-soft), var(--accent));
+    border-radius: 4px;
+    transition: width 0.4s ease;
+  }
+
+  /* Revisão final antes de enviar */
+  .revisao-box { max-width: 400px; text-align: left; }
+  .revisao-titulo {
+    font-family: 'Courier New', monospace;
+    font-size: 12px;
+    letter-spacing: 0.03em;
+    color: var(--accent-soft);
+    text-transform: uppercase;
+    margin: 0 0 16px;
+  }
+  .revisao-linha { display: grid; gap: 4px; margin-bottom: 14px; }
+  .revisao-rotulo {
+    font-family: 'Courier New', monospace;
+    font-size: 11px;
+    color: var(--ink-soft);
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+  }
+  .revisao-valor { font-size: 14px; color: var(--ink); word-break: break-word; }
+  .revisao-anexos { display: flex; flex-wrap: wrap; gap: 6px; }
+  .revisao-anexo-chip {
+    font-family: 'Courier New', monospace;
+    font-size: 11px;
+    background: var(--paper-dark);
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    padding: 4px 10px;
+    color: var(--accent-soft);
+  }
+  .revisao-preview {
+    font-size: 13px;
+    color: var(--ink-soft);
+    line-height: 1.5;
+    margin: 0;
+    white-space: pre-line;
+    max-height: 90px;
+    overflow: auto;
+  }
+
+  /* Indicador de sucesso do envio */
+  .sucesso-envio {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    padding: 14px 8px 4px;
+    animation: apareceSucesso 0.3s ease;
+  }
+  .sucesso-envio span {
+    font-family: 'Courier New', monospace;
+    font-size: 13px;
+    color: var(--accent);
+    font-weight: 700;
+    text-align: center;
+  }
+  .sucesso-check { width: 52px; height: 52px; }
+  .sucesso-check-circulo {
+    stroke: var(--accent);
+    stroke-width: 2;
+    stroke-dasharray: 151;
+    stroke-dashoffset: 151;
+    animation: tracarCirculo 0.5s ease forwards;
+  }
+  .sucesso-check-marca {
+    stroke: var(--accent);
+    stroke-width: 3;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    stroke-dasharray: 36;
+    stroke-dashoffset: 36;
+    animation: tracarMarca 0.3s ease 0.4s forwards;
+  }
+  @keyframes tracarCirculo { to { stroke-dashoffset: 0; } }
+  @keyframes tracarMarca { to { stroke-dashoffset: 0; } }
+  @keyframes apareceSucesso { from { opacity: 0; transform: scale(0.92); } to { opacity: 1; transform: scale(1); } }
+
+  /* Skeleton loading na abertura do site */
+  .skeleton-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 999;
+    background: var(--paper);
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    padding: 32px 20px;
+    transition: opacity 0.35s ease;
+  }
+  .skeleton-overlay.escondido { opacity: 0; pointer-events: none; }
+  .skeleton-wrap { max-width: 640px; width: 100%; display: grid; gap: 18px; margin-top: 10px; }
+  .skeleton-block {
+    border-radius: 10px;
+    background: linear-gradient(90deg, var(--paper-dark) 25%, #1e2226 37%, var(--paper-dark) 63%);
+    background-size: 400% 100%;
+    animation: skeletonPulso 1.4s ease infinite;
+  }
+  .skeleton-header { height: 56px; border-radius: 12px; }
+  .skeleton-tabs { height: 44px; }
+  .skeleton-field { height: 90px; }
+  .skeleton-field.short { height: 60px; }
+  @keyframes skeletonPulso {
+    0% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .skeleton-block { animation: none; }
+    .sucesso-check-circulo, .sucesso-check-marca { animation: none; stroke-dashoffset: 0; }
+    .sucesso-envio { animation: none; }
+  }
 </style>
 </head>
 <body>
+<div class="skeleton-overlay" id="skeletonOverlay" aria-hidden="true">
+  <div class="skeleton-wrap">
+    <div class="skeleton-block skeleton-header"></div>
+    <div class="skeleton-block skeleton-tabs"></div>
+    <div class="skeleton-block skeleton-field"></div>
+    <div class="skeleton-block skeleton-field"></div>
+    <div class="skeleton-block skeleton-field short"></div>
+  </div>
+</div>
 <div class="wrap">
   <header>
-    <span class="version-tag">v1.51</span>
+    <span class="version-tag">v1.53</span>
     <div class="header-brand">
       <img src="data:image/png;base64,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" alt="" class="header-logo">
       <div>
@@ -615,9 +810,9 @@
   </header>
 
   <div class="tabs" role="tablist">
-    <button type="button" class="tab-btn active" id="tabRelatorioBtn" role="tab" aria-selected="true">Relatório DEJEM</button>
-    <button type="button" class="tab-btn" id="tabAssinarBtn" role="tab" aria-selected="false">Assinar Escala</button>
-    <button type="button" class="tab-btn" id="tabEnviarBtn" role="tab" aria-selected="false">Enviar E-mail</button>
+    <button type="button" class="tab-btn active" id="tabRelatorioBtn" role="tab" aria-selected="true">1. Relatório</button>
+    <button type="button" class="tab-btn" id="tabAssinarBtn" role="tab" aria-selected="false">2. Assinar</button>
+    <button type="button" class="tab-btn" id="tabEnviarBtn" role="tab" aria-selected="false">3. Enviar</button>
   </div>
 
   <div id="panel-relatorio" class="panel">
@@ -901,6 +1096,13 @@
   </div>
 
   <div id="panel-enviar" class="panel" hidden>
+    <div class="progresso-docs">
+      <div class="progresso-docs-label" id="progressoDocsTexto">0 de 2 documentos prontos</div>
+      <div class="progresso-docs-track">
+        <div class="progresso-docs-fill" id="progressoDocsFill" style="width: 0%;"></div>
+      </div>
+    </div>
+
     <fieldset>
       <legend>Documentos para anexar</legend>
       <div class="stack" id="listaAnexos">
@@ -944,6 +1146,13 @@
     <div class="stack" style="gap: 8px;">
       <button type="button" id="enviarEmailBtn">Enviar e-mail</button>
       <p class="status" id="statusEnviarEmail" role="status" aria-live="polite"></p>
+      <div class="sucesso-envio" id="sucessoEnvio" hidden>
+        <svg class="sucesso-check" viewBox="0 0 52 52" aria-hidden="true">
+          <circle class="sucesso-check-circulo" cx="26" cy="26" r="24" fill="none"/>
+          <path class="sucesso-check-marca" fill="none" d="M14 27l7 7 16-16"/>
+        </svg>
+        <span id="sucessoEnvioTexto"></span>
+      </div>
     </div>
   </div>
 </div>
@@ -954,6 +1163,32 @@
     <div class="confirm-actions">
       <button type="button" id="confirmCancelBtn" class="secondary-btn">Cancelar</button>
       <button type="button" id="confirmOkBtn" class="secondary-btn danger-btn">Excluir</button>
+    </div>
+  </div>
+</div>
+
+<div id="revisaoEmailOverlay" class="confirm-overlay" hidden>
+  <div class="confirm-box revisao-box" role="alertdialog" aria-modal="true" aria-labelledby="revisaoTitulo">
+    <p class="revisao-titulo" id="revisaoTitulo">Conferir antes de enviar</p>
+    <div class="revisao-linha">
+      <span class="revisao-rotulo">Para</span>
+      <span class="revisao-valor" id="revisaoPara"></span>
+    </div>
+    <div class="revisao-linha">
+      <span class="revisao-rotulo">Assunto</span>
+      <span class="revisao-valor" id="revisaoAssunto"></span>
+    </div>
+    <div class="revisao-linha">
+      <span class="revisao-rotulo">Anexos</span>
+      <div class="revisao-anexos" id="revisaoAnexos"></div>
+    </div>
+    <div class="revisao-linha">
+      <span class="revisao-rotulo">Mensagem</span>
+      <p class="revisao-preview" id="revisaoPreview"></p>
+    </div>
+    <div class="confirm-actions">
+      <button type="button" class="secondary-btn" id="revisaoCancelarBtn">Voltar e editar</button>
+      <button type="button" id="revisaoEnviarBtn">Confirmar e enviar</button>
     </div>
   </div>
 </div>
@@ -1146,9 +1381,12 @@ function resetFormState() {
   if (mensagemEmail) mensagemEmail.value = '';
   const statusEnviarEmail = document.getElementById('statusEnviarEmail');
   if (statusEnviarEmail) statusEnviarEmail.textContent = '';
+  if (typeof esconderSucessoEnvio === 'function') esconderSucessoEnvio();
 
   const confirmOverlay = document.getElementById('confirmOverlay');
   if (confirmOverlay) confirmOverlay.hidden = true;
+  const revisaoEmailOverlay = document.getElementById('revisaoEmailOverlay');
+  if (revisaoEmailOverlay) revisaoEmailOverlay.hidden = true;
 
   // Sempre volta para a primeira aba
   if (typeof showTab === 'function') showTab('relatorio');
@@ -1195,40 +1433,70 @@ function bytesToBase64(bytes) {
   return btoa(binary);
 }
 
+// Vibração leve de confirmação (só funciona em Android; no iPhone o Safari
+// não suporta navigator.vibrate, então ali isso não faz nada — sem problema).
+function vibrarSuave(padrao) {
+  if (navigator.vibrate) {
+    try { navigator.vibrate(padrao || 12); } catch (err) { /* ignora */ }
+  }
+}
+
 // --- Enviar E-mail: guarda os últimos PDFs gerados nesta sessão, prontos pra anexar ---
 let ultimosDocumentos = { relatorio: null, parte: null, escala: null };
 let ultimoAssuntoAuto = null;
 let ultimaMensagemAuto = null;
 
 function atualizarChecklistAnexos() {
+  const relatorioDoc = ultimosDocumentos.relatorio;
+  const parteObrigatoria = !!(relatorioDoc && (relatorioDoc.situacao === 'remanejado' || relatorioDoc.situacao === 'reforco'));
+
   const mapa = [
-    ['relatorio', 'anexarRelatorio', 'statusAnexoRelatorio', 'checkRowRelatorio', 'verRelatorio', 'não gerado'],
-    ['parte', 'anexarParte', 'statusAnexoParte', 'checkRowParte', 'verParte', 'não gerada'],
-    ['escala', 'anexarEscala', 'statusAnexoEscala', 'checkRowEscala', 'verEscala', 'não gerada'],
+    ['relatorio', 'anexarRelatorio', 'statusAnexoRelatorio', 'checkRowRelatorio', 'verRelatorio', 'não gerado', true],
+    ['parte', 'anexarParte', 'statusAnexoParte', 'checkRowParte', 'verParte', 'não gerada', parteObrigatoria],
+    ['escala', 'anexarEscala', 'statusAnexoEscala', 'checkRowEscala', 'verEscala', 'não gerada', true],
   ];
-  mapa.forEach(([chave, checkId, statusId, rowId, verId, textoVazio]) => {
+  mapa.forEach(([chave, checkId, statusId, rowId, verId, textoVazio, obrigatorio]) => {
     const doc = ultimosDocumentos[chave];
     const checkEl = document.getElementById(checkId);
     const statusEl = document.getElementById(statusId);
     const rowEl = document.getElementById(rowId);
     const verEl = document.getElementById(verId);
     if (!checkEl || !statusEl || !rowEl || !verEl) return;
+    rowEl.classList.remove('disponivel', 'indisponivel', 'faltando');
     if (doc) {
       checkEl.disabled = false;
       checkEl.checked = true;
       verEl.disabled = false;
       statusEl.textContent = 'pronto';
       rowEl.classList.add('disponivel');
-      rowEl.classList.remove('indisponivel');
+    } else if (obrigatorio) {
+      checkEl.disabled = true;
+      checkEl.checked = false;
+      verEl.disabled = true;
+      statusEl.textContent = 'faltando';
+      rowEl.classList.add('faltando');
     } else {
       checkEl.disabled = true;
       checkEl.checked = false;
       verEl.disabled = true;
       statusEl.textContent = textoVazio;
-      rowEl.classList.remove('disponivel');
       rowEl.classList.add('indisponivel');
     }
   });
+
+  // Barra de progresso: quantos dos documentos OBRIGATÓRIOS já estão prontos.
+  const totalObrigatorios = 2 + (parteObrigatoria ? 1 : 0);
+  let prontos = 0;
+  if (ultimosDocumentos.relatorio) prontos++;
+  if (ultimosDocumentos.escala) prontos++;
+  if (parteObrigatoria && ultimosDocumentos.parte) prontos++;
+  const pct = totalObrigatorios ? Math.round((prontos / totalObrigatorios) * 100) : 0;
+  const fillEl = document.getElementById('progressoDocsFill');
+  const textoEl = document.getElementById('progressoDocsTexto');
+  if (fillEl && textoEl) {
+    fillEl.style.width = pct + '%';
+    textoEl.textContent = `${prontos} de ${totalObrigatorios} documentos prontos`;
+  }
 }
 
 function abrirPdfDocumento(chave) {
@@ -1297,6 +1565,7 @@ document.getElementById('assinarBtn').addEventListener('click', async function()
     statusEl.textContent = '';
     return;
   }
+  vibrarSuave();
 
   const assinarBtnEl = this;
   operacaoEmAndamento = true;
@@ -1409,14 +1678,18 @@ document.getElementById('enviarEmailBtn').addEventListener('click', async functi
     return;
   }
 
-  const confirmarEnvio = await confirmarCustom(
-    `Enviar e-mail com ${anexosSelecionados.length} anexo(s) para cpam1dejemmetro@policiamilitar.sp.gov.br (cópia: thiago_costa1907@hotmail.com)?`,
-    { okLabel: 'Enviar', danger: false }
-  );
+  esconderSucessoEnvio();
+  const confirmarEnvio = await revisarEnvioEmail({
+    destinatario: 'cpam1dejemmetro@policiamilitar.sp.gov.br (cópia: thiago_costa1907@hotmail.com)',
+    assunto,
+    mensagem,
+    anexos: anexosSelecionados.map(a => a.filename),
+  });
   if (!confirmarEnvio) {
     statusEl.textContent = '';
     return;
   }
+  vibrarSuave();
 
   operacaoEmAndamento = true;
   btn.disabled = true;
@@ -1438,9 +1711,13 @@ document.getElementById('enviarEmailBtn').addEventListener('click', async functi
       statusEl.textContent = data.error;
       return;
     }
-    statusEl.textContent = data.confirmado
-      ? `E-mail enviado e confirmado em Enviados (${segundos}s).`
-      : `E-mail enviado (${segundos}s), mas não consegui confirmar em Enviados ainda — confira o Gmail.`;
+    if (data.confirmado) {
+      statusEl.textContent = '';
+      mostrarSucessoEnvio(`E-mail enviado e confirmado em Enviados (${segundos}s).`);
+      vibrarSuave([15, 60, 15]);
+    } else {
+      statusEl.textContent = `E-mail enviado (${segundos}s), mas não consegui confirmar em Enviados ainda — confira o Gmail.`;
+    }
   } catch (err) {
     statusEl.textContent = mensagemErroEnvioEmail(err);
     console.error(err);
@@ -1609,6 +1886,68 @@ function confirmarCustom(mensagem, opcoes) {
     okBtn.addEventListener('click', onOk);
     cancelBtn.addEventListener('click', onCancel);
   });
+}
+
+// Tela de revisão final antes de enviar o e-mail: mostra destinatário, assunto,
+// anexos (como chips) e um preview da mensagem, num cartão só.
+function revisarEnvioEmail({ destinatario, assunto, mensagem, anexos }) {
+  return new Promise((resolve) => {
+    const overlay = document.getElementById('revisaoEmailOverlay');
+    document.getElementById('revisaoPara').textContent = destinatario;
+    document.getElementById('revisaoAssunto').textContent = assunto || '(sem assunto)';
+    document.getElementById('revisaoPreview').textContent = mensagem;
+
+    const anexosEl = document.getElementById('revisaoAnexos');
+    anexosEl.innerHTML = '';
+    anexos.forEach((nome) => {
+      const chip = document.createElement('span');
+      chip.className = 'revisao-anexo-chip';
+      chip.textContent = nome;
+      anexosEl.appendChild(chip);
+    });
+
+    overlay.hidden = false;
+
+    const enviarBtn = document.getElementById('revisaoEnviarBtn');
+    const cancelarBtn = document.getElementById('revisaoCancelarBtn');
+
+    function limpar(resultado) {
+      overlay.hidden = true;
+      enviarBtn.removeEventListener('click', onOk);
+      cancelarBtn.removeEventListener('click', onCancel);
+      resolve(resultado);
+    }
+    function onOk() { limpar(true); }
+    function onCancel() { limpar(false); }
+
+    enviarBtn.addEventListener('click', onOk);
+    cancelarBtn.addEventListener('click', onCancel);
+  });
+}
+
+// Indicador de sucesso (check verde animado) depois do envio confirmado em Enviados.
+function mostrarSucessoEnvio(mensagem) {
+  const el = document.getElementById('sucessoEnvio');
+  if (!el) return;
+  document.getElementById('sucessoEnvioTexto').textContent = mensagem;
+  el.hidden = false;
+  // Reinicia a animação de desenhar o check, mesmo se já tinha aparecido antes nesta sessão.
+  el.style.animation = 'none';
+  void el.offsetWidth;
+  el.style.animation = '';
+  const circulo = el.querySelector('.sucesso-check-circulo');
+  const marca = el.querySelector('.sucesso-check-marca');
+  [circulo, marca].forEach((svgEl) => {
+    if (!svgEl) return;
+    svgEl.style.animation = 'none';
+    void svgEl.offsetWidth;
+    svgEl.style.animation = '';
+  });
+}
+
+function esconderSucessoEnvio() {
+  const el = document.getElementById('sucessoEnvio');
+  if (el) el.hidden = true;
 }
 
 document.getElementById('excluirLinhaBtn').addEventListener('click', async function() {
@@ -2034,6 +2373,7 @@ document.getElementById('form').addEventListener('submit', async function(e) {
       statusEl.textContent = '';
       return;
     }
+    vibrarSuave();
 
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF({ unit: 'pt', format: 'a4' });
@@ -2074,7 +2414,7 @@ resetFormState();
 // (o iPhone mantém o atalho da tela inicial "suspenso" em vez de recarregar sozinho,
 // então esse é o jeito de avisar que uma atualização está disponível sem precisar
 // remover e adicionar o atalho de novo)
-const CURRENT_VERSION = 'v1.51';
+const CURRENT_VERSION = 'v1.53';
 let operacaoEmAndamento = false;
 
 async function checkForUpdate() {
@@ -2094,6 +2434,24 @@ async function checkForUpdate() {
 }
 
 checkForUpdate();
+
+// Skeleton de carregamento: esconde assim que a página termina de carregar
+// (scripts do jsPDF/pdf-lib incluídos), com um tempinho mínimo pra não "piscar"
+// em conexões muito rápidas, e um limite de segurança caso 'load' demore demais.
+function esconderSkeleton() {
+  const el = document.getElementById('skeletonOverlay');
+  if (!el || el.dataset.escondido) return;
+  el.dataset.escondido = '1';
+  el.classList.add('escondido');
+  setTimeout(() => el.remove(), 400);
+}
+const skeletonMinimo = new Promise((resolve) => setTimeout(resolve, 300));
+const skeletonCarregou = new Promise((resolve) => {
+  if (document.readyState === 'complete') resolve();
+  else window.addEventListener('load', resolve, { once: true });
+});
+Promise.all([skeletonMinimo, skeletonCarregou]).then(esconderSkeleton);
+setTimeout(esconderSkeleton, 2500); // limite de segurança
 
 window.addEventListener('pageshow', function(event) {
   if (!event.persisted) {
