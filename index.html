@@ -72,6 +72,8 @@
   v1.66 — Corrigido: "Pesquisar Escala" agora confirma se o AnyConnect já está conectado antes de abrir a página (senão avisa e não fica piscando o aviso de "anexar escala" à toa, já que sem VPN a página nem carrega). Campos de nome agora deixam a primeira letra de cada palavra maiúscula sozinho. Depois de gerar o PDF aparece o mesmo check verde animado do envio de e-mail. Novo botão "Compartilhar" ao lado do "Ver PDF" (Relatório/Parte/Escala) pra mandar direto por WhatsApp/AirDrop/Arquivos. Aviso do navegador se tentar fechar a aba com campo preenchido mas sem gerar o PDF ainda. jsPDF e pdf-lib agora só carregam na hora de gerar/assinar, deixando a abertura do app mais rápida
   v1.67 — Removido o "Duplicar último relatório" (aviso e botão no topo da aba Relatório) que tinha entrado na v1.62
   v1.68 — Ao gerar Relatório ou Parte de Falta, agora avisa tudo que está faltando preencher de uma vez só (nomes, unidade, número, estação, RE incompleto), em vez de deixar gerar com campo em branco sem avisar nada; a nova animação de sucesso do envio de e-mail (o check verde) agora aparece centralizada na tela por cima de tudo, com fundo escurecido, em vez de ficar lá embaixo na aba onde passava despercebida — some sozinha depois de alguns segundos ou ao tocar na tela
+  v1.69 — "Tipo de documento" e "Situação do relatório" trocaram os botões por uma caixa de seleção (select), deixando os botões do app só pra ações de verdade; "Histórico de envios" ganhou seu próprio quadro (fieldset) separado de Destinatários, e agora fica salvo no aparelho — antes sumia toda vez que o app recarregava sozinho pra atualizar, por isso parecia sempre vazio; a animação de sucesso (check verde centralizado) também aparece ao assinar a escala, igual já acontecia no envio de e-mail
+  v1.70 — A mesma animação de sucesso centralizada (check verde) agora também aparece ao gerar o Relatório ou a Parte de Falta, no lugar do check pequeno que ficava embaixo do botão "Gerar PDF"
 -->
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover, interactive-widget=resizes-content">
@@ -474,40 +476,6 @@
     flex-shrink: 0;
   }
   [hidden] { display: none !important; }
-  .seg {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 8px;
-  }
-  .seg.seg-3 {
-    grid-template-columns: 1fr 1fr 1fr;
-  }
-  .seg-btn {
-    appearance: none;
-    border: 1px solid var(--line);
-    background: var(--white);
-    color: var(--ink-soft);
-    font-family: Georgia, 'Times New Roman', serif;
-    font-size: 14px;
-    font-weight: 700;
-    min-height: 44px;
-    padding: 10px 8px;
-    border-radius: 6px;
-    cursor: pointer;
-    box-sizing: border-box;
-  }
-  .seg.seg-3 .seg-btn {
-    font-size: 12px;
-    padding: 10px 4px;
-  }
-  .seg-btn:hover { background: var(--paper-dark); }
-  .seg-btn.active,
-  .seg-btn.active:hover {
-    border-color: var(--accent);
-    color: var(--accent);
-    background: rgba(34, 230, 160, 0.12);
-    box-shadow: inset 0 0 0 1px var(--accent);
-  }
   #gerarPdfBtn:disabled,
   #gerarPdfBtn:disabled:hover {
     opacity: 0.5;
@@ -940,42 +908,8 @@
   .historico-item-status.confirmado { color: var(--accent-soft); }
   .historico-item-status.enviado { color: #d9a441; }
 
-  /* Indicador de sucesso do envio */
-  .sucesso-envio {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 8px;
-    padding: 14px 8px 4px;
-    animation: apareceSucesso 0.3s ease;
-  }
-  .sucesso-envio span {
-    font-family: 'Courier New', monospace;
-    font-size: 13px;
-    color: var(--accent);
-    font-weight: 700;
-    text-align: center;
-  }
-  .sucesso-check { width: 52px; height: 52px; }
-  .sucesso-check-circulo {
-    stroke: var(--accent);
-    stroke-width: 2;
-    stroke-dasharray: 151;
-    stroke-dashoffset: 151;
-    animation: tracarCirculo 0.5s ease forwards;
-  }
-  .sucesso-check-marca {
-    stroke: var(--accent);
-    stroke-width: 3;
-    stroke-linecap: round;
-    stroke-linejoin: round;
-    stroke-dasharray: 36;
-    stroke-dashoffset: 36;
-    animation: tracarMarca 0.3s ease 0.4s forwards;
-  }
   @keyframes tracarCirculo { to { stroke-dashoffset: 0; } }
   @keyframes tracarMarca { to { stroke-dashoffset: 0; } }
-  @keyframes apareceSucesso { from { opacity: 0; transform: scale(0.92); } to { opacity: 1; transform: scale(1); } }
 
   /* Toast de sucesso: aparece centralizado na tela por cima de tudo, pra nunca
      passar despercebido, seja lá em que parte da aba a pessoa estiver com o scroll. */
@@ -1068,8 +1002,6 @@
   }
   @media (prefers-reduced-motion: reduce) {
     .skeleton-block { animation: none; }
-    .sucesso-check-circulo, .sucesso-check-marca { animation: none; stroke-dashoffset: 0; }
-    .sucesso-envio { animation: none; }
     .toast-sucesso, .toast-sucesso-card, .toast-sucesso-circulo, .toast-sucesso-marca { animation: none; stroke-dashoffset: 0; }
   }
 </style>
@@ -1086,7 +1018,7 @@
 </div>
 <div class="wrap">
   <header>
-    <span class="version-tag">v1.68</span>
+    <span class="version-tag">v1.70</span>
     <div class="header-brand">
       <img src="data:image/png;base64,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" alt="" class="header-logo">
       <div>
@@ -1140,20 +1072,20 @@
       <legend>Identificação do documento</legend>
       <div class="stack">
         <div>
-          <label id="lblTipoDocumento">Tipo de documento</label>
-          <div class="seg" role="group" aria-labelledby="lblTipoDocumento">
-            <button type="button" class="seg-btn active" id="segRelatorio" aria-pressed="true">Relatório</button>
-            <button type="button" class="seg-btn" id="segParte" aria-pressed="false">Parte de Falta</button>
-          </div>
+          <label for="tipoDocumentoSelect">Tipo de documento</label>
+          <select id="tipoDocumentoSelect">
+            <option value="relatorio">Relatório</option>
+            <option value="parte">Parte de Falta</option>
+          </select>
         </div>
 
         <div id="grupoSituacaoRelatorio">
-          <label id="lblSituacaoRelatorio">Situação do relatório</label>
-          <div class="seg seg-3" role="group" aria-labelledby="lblSituacaoRelatorio">
-            <button type="button" class="seg-btn active" id="segCompareceu" aria-pressed="true">Parceiro veio</button>
-            <button type="button" class="seg-btn" id="segRemanejado" aria-pressed="false">Fui remanejado</button>
-            <button type="button" class="seg-btn" id="segReforco" aria-pressed="false">Fui reforçado</button>
-          </div>
+          <label for="situacaoRelatorioSelect">Situação do relatório</label>
+          <select id="situacaoRelatorioSelect">
+            <option value="compareceu">Parceiro veio</option>
+            <option value="remanejado">Fui remanejado</option>
+            <option value="reforco">Fui reforçado</option>
+          </select>
         </div>
 
         <div>
@@ -1346,13 +1278,6 @@
 
     <button type="submit" id="gerarPdfBtn">Gerar PDF</button>
     <p class="status" id="status" role="status" aria-live="polite"></p>
-    <div class="sucesso-envio" id="sucessoPdf" hidden>
-      <svg class="sucesso-check" viewBox="0 0 52 52" aria-hidden="true">
-        <circle class="sucesso-check-circulo" cx="26" cy="26" r="24" fill="none"/>
-        <path class="sucesso-check-marca" fill="none" d="M14 27l7 7 16-16"/>
-      </svg>
-      <span id="sucessoPdfTexto"></span>
-    </div>
   </form>
   </div>
 
@@ -1405,10 +1330,13 @@
       </div>
     </div>
 
-    <button type="button" id="historicoAbrirBtn" class="secondary-btn block-btn historico-abrir-btn">
-      Histórico de envios
-      <span class="historico-badge" id="historicoBadge" hidden>0</span>
-    </button>
+    <fieldset>
+      <legend>Histórico de envios</legend>
+      <button type="button" id="historicoAbrirBtn" class="secondary-btn block-btn historico-abrir-btn">
+        Ver histórico
+        <span class="historico-badge" id="historicoBadge" hidden>0</span>
+      </button>
+    </fieldset>
 
     <fieldset>
       <legend>Documentos para anexar</legend>
@@ -1633,10 +1561,7 @@ function atualizarLayout() {
   const mostrarFalta = !ehRelatorio || !situacaoAtualEhCompareceu;
 
   // seletor de tipo de documento
-  document.getElementById('segRelatorio').classList.toggle('active', ehRelatorio);
-  document.getElementById('segParte').classList.toggle('active', !ehRelatorio);
-  document.getElementById('segRelatorio').setAttribute('aria-pressed', String(ehRelatorio));
-  document.getElementById('segParte').setAttribute('aria-pressed', String(!ehRelatorio));
+  document.getElementById('tipoDocumentoSelect').value = tipoDocumento;
 
   // número + botões de cada documento
   document.getElementById('docRelatorio').hidden = !ehRelatorio;
@@ -1646,12 +1571,7 @@ function atualizarLayout() {
 
   // seletor de situação do relatório (só existe dentro do Relatório)
   document.getElementById('grupoSituacaoRelatorio').hidden = !ehRelatorio;
-  document.getElementById('segCompareceu').classList.toggle('active', situacaoAtualEhCompareceu);
-  document.getElementById('segRemanejado').classList.toggle('active', situacaoRelatorio === 'remanejado');
-  document.getElementById('segReforco').classList.toggle('active', situacaoRelatorio === 'reforco');
-  document.getElementById('segCompareceu').setAttribute('aria-pressed', String(situacaoAtualEhCompareceu));
-  document.getElementById('segRemanejado').setAttribute('aria-pressed', String(situacaoRelatorio === 'remanejado'));
-  document.getElementById('segReforco').setAttribute('aria-pressed', String(situacaoRelatorio === 'reforco'));
+  document.getElementById('situacaoRelatorioSelect').value = situacaoRelatorio;
 
   // fieldset com os detalhes do remanejamento/reforço
   document.getElementById('fieldsetRemanejamento').hidden = !(ehRemanejado || ehReforco);
@@ -1768,12 +1688,8 @@ function escolherSituacao(situacao) {
   atualizarLayout();
 }
 
-document.getElementById('segRelatorio').addEventListener('click', () => escolherTipoDocumento('relatorio'));
-document.getElementById('segParte').addEventListener('click', () => escolherTipoDocumento('parte'));
-
-document.getElementById('segCompareceu').addEventListener('click', () => escolherSituacao('compareceu'));
-document.getElementById('segRemanejado').addEventListener('click', () => escolherSituacao('remanejado'));
-document.getElementById('segReforco').addEventListener('click', () => escolherSituacao('reforco'));
+document.getElementById('tipoDocumentoSelect').addEventListener('change', function() { escolherTipoDocumento(this.value); });
+document.getElementById('situacaoRelatorioSelect').addEventListener('change', function() { escolherSituacao(this.value); });
 
 // --- Reset completo do site (chamado no carregamento e toda vez que a aba/atalho é reaberto) ---
 function resetFormState() {
@@ -1839,8 +1755,7 @@ function resetFormState() {
   if (mensagemEmail) mensagemEmail.value = '';
   const statusEnviarEmail = document.getElementById('statusEnviarEmail');
   if (statusEnviarEmail) statusEnviarEmail.textContent = '';
-  if (typeof esconderSucessoEnvio === 'function') esconderSucessoEnvio();
-  if (typeof esconderSucesso === 'function') esconderSucesso('sucessoPdf');
+  if (typeof esconderToastSucesso === 'function') esconderToastSucesso();
 
   const confirmOverlay = document.getElementById('confirmOverlay');
   if (confirmOverlay) confirmOverlay.hidden = true;
@@ -1907,10 +1822,39 @@ let ultimosDocumentos = { relatorio: null, parte: null, escala: null };
 let ultimoAssuntoAuto = null;
 let ultimaMensagemAuto = null;
 let emailEnviadoConfirmado = false; // pra marcar a etapa "3. Enviar" como concluída no indicador de progresso
-let historicoEnvios = []; // {dataHora, assunto, anexos: [nomes], confirmado} — só durante esta sessão
+
+// Histórico de envios: fica salvo no aparelho (localStorage), igual a lista de
+// destinatários — assim continua mostrando os envios anteriores mesmo depois que
+// o app recarrega sozinho (atualização automática) ou você reabre depois de um tempo,
+// em vez de esvaziar toda hora e parecer que "não tem nada lá dentro".
+const HISTORICO_STORAGE_KEY = 'dejem_historico_envios_v1';
+const HISTORICO_MAX_ITENS = 30;
+
+function carregarHistoricoEnvios() {
+  try {
+    const salvo = localStorage.getItem(HISTORICO_STORAGE_KEY);
+    if (salvo) {
+      const lista = JSON.parse(salvo);
+      if (Array.isArray(lista)) {
+        return lista.map(item => ({ ...item, dataHora: new Date(item.dataHora) }));
+      }
+    }
+  } catch (err) { /* localStorage indisponível — começa vazio */ }
+  return [];
+}
+
+function salvarHistoricoEnvios() {
+  try {
+    localStorage.setItem(HISTORICO_STORAGE_KEY, JSON.stringify(historicoEnvios));
+  } catch (err) { /* localStorage indisponível — histórico não persiste, sem problema */ }
+}
+
+let historicoEnvios = carregarHistoricoEnvios(); // {dataHora, assunto, anexos: [nomes], confirmado, destinatarios}
 
 function registrarHistoricoEnvio({ assunto, anexos, confirmado, destinatarios: paraQuem }) {
   historicoEnvios.unshift({ dataHora: new Date(), assunto, anexos, confirmado, destinatarios: paraQuem || [] });
+  if (historicoEnvios.length > HISTORICO_MAX_ITENS) historicoEnvios.length = HISTORICO_MAX_ITENS;
+  salvarHistoricoEnvios();
   atualizarHistoricoEnvios();
 }
 
@@ -1956,6 +1900,7 @@ function atualizarHistoricoEnvios() {
     listaEl.appendChild(div);
   });
 }
+atualizarHistoricoEnvios(); // já mostra a contagem/lista salva de sessões anteriores, sem esperar abrir o histórico
 
 function atualizarIndicadorEtapas() {
   const passo1 = !!(ultimosDocumentos.relatorio || ultimosDocumentos.parte);
@@ -2170,7 +2115,9 @@ document.getElementById('assinarBtn').addEventListener('click', async function()
     const fileName = 'Parte_Ass_-_THIAGO_SILVA_COSTA.pdf';
     ultimosDocumentos.escala = { base64: bytesToBase64(pdfBytes), fileName, geradoEm: new Date() };
     atualizarChecklistAnexos();
-    statusEl.textContent = `PDF assinado: ${fileName}. Vá em "Enviar E-mail" pra conferir e mandar.`;
+    statusEl.textContent = '';
+    mostrarToastSucesso(`PDF assinado: ${fileName}. Vá em "Enviar E-mail" pra conferir e mandar.`);
+    vibrarSuave([15, 60, 15]);
   } catch (err) {
     statusEl.textContent = 'Não foi possível assinar. Confira se o PDF anexado é válido.';
     console.error(err);
@@ -2682,33 +2629,6 @@ document.getElementById('historicoOverlay').addEventListener('click', function(e
   if (e.target === this) this.hidden = true;
 });
 
-// Indicador de sucesso (check verde animado). Reaproveitado tanto no envio de e-mail
-// confirmado em Enviados quanto na geração de PDF (Relatório/Parte).
-function mostrarSucesso(elId, mensagem) {
-  const el = document.getElementById(elId);
-  if (!el) return;
-  const textoEl = document.getElementById(elId + 'Texto');
-  if (textoEl) textoEl.textContent = mensagem;
-  el.hidden = false;
-  // Reinicia a animação de desenhar o check, mesmo se já tinha aparecido antes nesta sessão.
-  el.style.animation = 'none';
-  void el.offsetWidth;
-  el.style.animation = '';
-  const circulo = el.querySelector('.sucesso-check-circulo');
-  const marca = el.querySelector('.sucesso-check-marca');
-  [circulo, marca].forEach((svgEl) => {
-    if (!svgEl) return;
-    svgEl.style.animation = 'none';
-    void svgEl.offsetWidth;
-    svgEl.style.animation = '';
-  });
-}
-
-function esconderSucesso(elId) {
-  const el = document.getElementById(elId);
-  if (el) el.hidden = true;
-}
-
 // Toast de sucesso centralizado na tela (por cima de tudo, sem depender de scroll) —
 // usado no envio de e-mail confirmado, que antes ficava lá embaixo na aba e passava
 // despercebido. Some sozinho depois de um tempo, ou ao tocar em qualquer lugar.
@@ -3077,7 +2997,7 @@ document.getElementById('form').addEventListener('submit', async function(e) {
   e.preventDefault();
   const statusEl = document.getElementById('status');
   const gerarBtn = document.getElementById('gerarPdfBtn');
-  esconderSucesso('sucessoPdf');
+  esconderToastSucesso();
 
   // Confere se os REs desse documento estão completos (6 números + o dígito
   // verificador, ex: 142113-1) e se os outros campos obrigatórios (nomes, unidade,
@@ -3224,7 +3144,7 @@ document.getElementById('form').addEventListener('submit', async function(e) {
     };
     atualizarChecklistAnexos();
     statusEl.textContent = '';
-    mostrarSucesso('sucessoPdf', `PDF pronto: ${fileName}. Vá em "Enviar E-mail" pra conferir e mandar.`);
+    mostrarToastSucesso(`PDF pronto: ${fileName}. Vá em "Enviar E-mail" pra conferir e mandar.`);
     vibrarSuave([15, 60, 15]);
   } catch (err) {
     statusEl.textContent = 'Não foi possível gerar o PDF. Confira os campos e tente novamente.';
@@ -3257,7 +3177,7 @@ resetFormState();
 // (o iPhone mantém o atalho da tela inicial "suspenso" em vez de recarregar sozinho,
 // então esse é o jeito de avisar que uma atualização está disponível sem precisar
 // remover e adicionar o atalho de novo)
-const CURRENT_VERSION = 'v1.68';
+const CURRENT_VERSION = 'v1.70';
 let operacaoEmAndamento = false;
 
 async function checkForUpdate() {
