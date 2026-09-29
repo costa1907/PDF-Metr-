@@ -71,6 +71,7 @@
   v1.65 — Campos de nome (nome de guerra/QRA e nome completo, de todo mundo: parceiro, quem faltou, dupla do remanejamento, reforço) agora só aceitam letras, espaço, hífen e apóstrofo — números e outros símbolos são bloqueados ao digitar
   v1.66 — Corrigido: "Pesquisar Escala" agora confirma se o AnyConnect já está conectado antes de abrir a página (senão avisa e não fica piscando o aviso de "anexar escala" à toa, já que sem VPN a página nem carrega). Campos de nome agora deixam a primeira letra de cada palavra maiúscula sozinho. Depois de gerar o PDF aparece o mesmo check verde animado do envio de e-mail. Novo botão "Compartilhar" ao lado do "Ver PDF" (Relatório/Parte/Escala) pra mandar direto por WhatsApp/AirDrop/Arquivos. Aviso do navegador se tentar fechar a aba com campo preenchido mas sem gerar o PDF ainda. jsPDF e pdf-lib agora só carregam na hora de gerar/assinar, deixando a abertura do app mais rápida
   v1.67 — Removido o "Duplicar último relatório" (aviso e botão no topo da aba Relatório) que tinha entrado na v1.62
+  v1.68 — Ao gerar Relatório ou Parte de Falta, agora avisa tudo que está faltando preencher de uma vez só (nomes, unidade, número, estação, RE incompleto), em vez de deixar gerar com campo em branco sem avisar nada; a nova animação de sucesso do envio de e-mail (o check verde) agora aparece centralizada na tela por cima de tudo, com fundo escurecido, em vez de ficar lá embaixo na aba onde passava despercebida — some sozinha depois de alguns segundos ou ao tocar na tela
 -->
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover, interactive-widget=resizes-content">
@@ -976,6 +977,67 @@
   @keyframes tracarMarca { to { stroke-dashoffset: 0; } }
   @keyframes apareceSucesso { from { opacity: 0; transform: scale(0.92); } to { opacity: 1; transform: scale(1); } }
 
+  /* Toast de sucesso: aparece centralizado na tela por cima de tudo, pra nunca
+     passar despercebido, seja lá em que parte da aba a pessoa estiver com o scroll. */
+  .toast-sucesso {
+    position: fixed;
+    inset: 0;
+    z-index: 1100;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    background: rgba(6, 8, 10, 0.55);
+    backdrop-filter: blur(3px);
+    -webkit-backdrop-filter: blur(3px);
+    animation: toastFundoAparece 0.25s ease;
+  }
+  .toast-sucesso.escondendo { animation: toastFundoSome 0.35s ease forwards; }
+  .toast-sucesso-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 14px;
+    max-width: 320px;
+    padding: 30px 26px 26px;
+    border-radius: 18px;
+    border: 1px solid var(--accent);
+    background: var(--paper-dark);
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.02);
+    text-align: center;
+    animation: toastCardAparece 0.4s cubic-bezier(0.2, 0.9, 0.3, 1.3);
+  }
+  .toast-sucesso.escondendo .toast-sucesso-card { animation: toastCardSome 0.3s ease forwards; }
+  .toast-sucesso-check { width: 64px; height: 64px; }
+  .toast-sucesso-circulo {
+    stroke: var(--accent);
+    stroke-width: 2;
+    stroke-dasharray: 151;
+    stroke-dashoffset: 151;
+    animation: tracarCirculo 0.55s ease forwards;
+  }
+  .toast-sucesso-marca {
+    stroke: var(--accent);
+    stroke-width: 3;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    stroke-dasharray: 36;
+    stroke-dashoffset: 36;
+    animation: tracarMarca 0.35s ease 0.45s forwards;
+  }
+  .toast-sucesso-texto {
+    margin: 0;
+    font-family: 'Courier New', monospace;
+    font-size: 13.5px;
+    line-height: 1.5;
+    color: var(--ink);
+    font-weight: 700;
+  }
+  @keyframes toastFundoAparece { from { opacity: 0; } to { opacity: 1; } }
+  @keyframes toastFundoSome { to { opacity: 0; } }
+  @keyframes toastCardAparece { from { opacity: 0; transform: scale(0.85) translateY(6px); } to { opacity: 1; transform: scale(1) translateY(0); } }
+  @keyframes toastCardSome { to { opacity: 0; transform: scale(0.92); } }
+
   /* Skeleton loading na abertura do site */
   .skeleton-overlay {
     position: fixed;
@@ -1008,6 +1070,7 @@
     .skeleton-block { animation: none; }
     .sucesso-check-circulo, .sucesso-check-marca { animation: none; stroke-dashoffset: 0; }
     .sucesso-envio { animation: none; }
+    .toast-sucesso, .toast-sucesso-card, .toast-sucesso-circulo, .toast-sucesso-marca { animation: none; stroke-dashoffset: 0; }
   }
 </style>
 </head>
@@ -1023,7 +1086,7 @@
 </div>
 <div class="wrap">
   <header>
-    <span class="version-tag">v1.67</span>
+    <span class="version-tag">v1.68</span>
     <div class="header-brand">
       <img src="data:image/png;base64,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" alt="" class="header-logo">
       <div>
@@ -1405,14 +1468,17 @@
     <div class="stack" style="gap: 8px;">
       <button type="button" id="enviarEmailBtn">Enviar e-mail</button>
       <p class="status" id="statusEnviarEmail" role="status" aria-live="polite"></p>
-      <div class="sucesso-envio" id="sucessoEnvio" hidden>
-        <svg class="sucesso-check" viewBox="0 0 52 52" aria-hidden="true">
-          <circle class="sucesso-check-circulo" cx="26" cy="26" r="24" fill="none"/>
-          <path class="sucesso-check-marca" fill="none" d="M14 27l7 7 16-16"/>
-        </svg>
-        <span id="sucessoEnvioTexto"></span>
-      </div>
     </div>
+  </div>
+</div>
+
+<div class="toast-sucesso" id="toastSucesso" hidden aria-live="polite">
+  <div class="toast-sucesso-card" id="toastSucessoCard">
+    <svg class="toast-sucesso-check" viewBox="0 0 52 52" aria-hidden="true">
+      <circle class="toast-sucesso-circulo" cx="26" cy="26" r="24" fill="none"/>
+      <path class="toast-sucesso-marca" fill="none" d="M14 27l7 7 16-16"/>
+    </svg>
+    <p class="toast-sucesso-texto" id="toastSucessoTexto"></p>
   </div>
 </div>
 
@@ -1637,6 +1703,20 @@ const ROTULOS_RE = {
   policial1RE: 'RE do 1º policial da equipe',
   policial2RE: 'RE do 2º policial da equipe',
   reforcoRE: 'RE do reforço',
+};
+
+// Nomes amigáveis dos campos que o navegador não bloqueia sozinho (não são "required"),
+// usados pra avisar exatamente o que falta preencher antes de gerar o PDF.
+const ROTULOS_CAMPOS = {
+  numeroParte: 'Número da Parte de Falta',
+  estacaoDestino: 'Estação de destino (fui remanejado)',
+  estacaoOrigem: 'Estação de origem do reforço',
+  parceiroNome: 'Nome de guerra do parceiro',
+  faltaNomeCompleto: 'Nome completo de quem faltou',
+  faltaPertencenteA: 'Unidade de quem faltou',
+  policial1Nome: 'Nome de guerra do 1º policial da equipe',
+  policial2Nome: 'Nome de guerra do 2º policial da equipe',
+  reforcoNome: 'Nome de guerra do reforço',
 };
 ['parceiroRE', 'faltaRE', 'policial1RE', 'policial2RE', 'reforcoRE'].forEach(function(id) {
   const el = document.getElementById(id);
@@ -2629,8 +2709,37 @@ function esconderSucesso(elId) {
   if (el) el.hidden = true;
 }
 
-function mostrarSucessoEnvio(mensagem) { mostrarSucesso('sucessoEnvio', mensagem); }
-function esconderSucessoEnvio() { esconderSucesso('sucessoEnvio'); }
+// Toast de sucesso centralizado na tela (por cima de tudo, sem depender de scroll) —
+// usado no envio de e-mail confirmado, que antes ficava lá embaixo na aba e passava
+// despercebido. Some sozinho depois de um tempo, ou ao tocar em qualquer lugar.
+let toastSucessoTimer = null;
+function mostrarToastSucesso(mensagem, duracaoMs) {
+  const el = document.getElementById('toastSucesso');
+  if (!el) return;
+  if (toastSucessoTimer) { clearTimeout(toastSucessoTimer); toastSucessoTimer = null; }
+  document.getElementById('toastSucessoTexto').textContent = mensagem;
+  el.hidden = false;
+  el.classList.remove('escondendo');
+  // Reinicia as animações do fundo, do card e do check, mesmo se já tinha aparecido antes.
+  [el, el.querySelector('.toast-sucesso-card'), el.querySelector('.toast-sucesso-circulo'), el.querySelector('.toast-sucesso-marca')].forEach((elAnim) => {
+    if (!elAnim) return;
+    elAnim.style.animation = 'none';
+    void elAnim.offsetWidth;
+    elAnim.style.animation = '';
+  });
+  toastSucessoTimer = setTimeout(esconderToastSucesso, duracaoMs || 3200);
+}
+function esconderToastSucesso() {
+  const el = document.getElementById('toastSucesso');
+  if (!el || el.hidden) return;
+  if (toastSucessoTimer) { clearTimeout(toastSucessoTimer); toastSucessoTimer = null; }
+  el.classList.add('escondendo');
+  setTimeout(() => { el.hidden = true; el.classList.remove('escondendo'); }, 320);
+}
+document.getElementById('toastSucesso').addEventListener('click', esconderToastSucesso);
+
+function mostrarSucessoEnvio(mensagem) { mostrarToastSucesso(mensagem); }
+function esconderSucessoEnvio() { esconderToastSucesso(); }
 
 document.getElementById('excluirLinhaBtn').addEventListener('click', async function() {
   const statusBusca = document.getElementById('statusBusca');
@@ -2971,25 +3080,46 @@ document.getElementById('form').addEventListener('submit', async function(e) {
   esconderSucesso('sucessoPdf');
 
   // Confere se os REs desse documento estão completos (6 números + o dígito
-  // verificador, ex: 142113-1) antes de gerar qualquer coisa.
+  // verificador, ex: 142113-1) e se os outros campos obrigatórios (nomes, unidade,
+  // número, estação) estão preenchidos antes de gerar qualquer coisa — junta tudo
+  // que estiver faltando numa mensagem só, em vez de avisar um campo de cada vez.
   const ehParteAgora = tipoDocumento === 'parte';
   let idsREParaConferir = [];
+  let idsObrigatoriosParaConferir = [];
   if (ehParteAgora) {
     idsREParaConferir = ['faltaRE'];
+    idsObrigatoriosParaConferir = ['numeroParte', 'faltaNomeCompleto', 'faltaPertencenteA'];
   } else if (situacaoRelatorio === 'compareceu') {
     idsREParaConferir = ['parceiroRE'];
+    idsObrigatoriosParaConferir = ['parceiroNome'];
   } else if (situacaoRelatorio === 'remanejado') {
     idsREParaConferir = ['faltaRE', 'policial1RE', 'policial2RE'];
+    idsObrigatoriosParaConferir = ['estacaoDestino', 'faltaNomeCompleto', 'faltaPertencenteA', 'policial1Nome', 'policial2Nome'];
   } else if (situacaoRelatorio === 'reforco') {
     idsREParaConferir = ['faltaRE', 'reforcoRE'];
+    idsObrigatoriosParaConferir = ['estacaoOrigem', 'faltaNomeCompleto', 'faltaPertencenteA', 'reforcoNome'];
+  }
+
+  const camposFaltando = [];
+  let primeiroCampoComProblema = null;
+  for (const id of idsObrigatoriosParaConferir) {
+    const el = document.getElementById(id);
+    if (el && !el.value.trim()) {
+      camposFaltando.push(ROTULOS_CAMPOS[id] || id);
+      if (!primeiroCampoComProblema) primeiroCampoComProblema = el;
+    }
   }
   for (const idRE of idsREParaConferir) {
     const elRE = document.getElementById(idRE);
     if (elRE && !reCompleto(elRE.value)) {
-      statusEl.textContent = `Preencha o RE completo (6 números + o dígito, ex: 142113-1) em "${ROTULOS_RE[idRE] || idRE}".`;
-      elRE.focus();
-      return;
+      camposFaltando.push(`${ROTULOS_RE[idRE] || idRE} (RE incompleto)`);
+      if (!primeiroCampoComProblema) primeiroCampoComProblema = elRE;
     }
+  }
+  if (camposFaltando.length) {
+    statusEl.textContent = `Falta preencher antes de gerar: ${camposFaltando.join('; ')}.`;
+    if (primeiroCampoComProblema) primeiroCampoComProblema.focus();
+    return;
   }
 
   operacaoEmAndamento = true;
@@ -3127,7 +3257,7 @@ resetFormState();
 // (o iPhone mantém o atalho da tela inicial "suspenso" em vez de recarregar sozinho,
 // então esse é o jeito de avisar que uma atualização está disponível sem precisar
 // remover e adicionar o atalho de novo)
-const CURRENT_VERSION = 'v1.67';
+const CURRENT_VERSION = 'v1.68';
 let operacaoEmAndamento = false;
 
 async function checkForUpdate() {
