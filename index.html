@@ -63,6 +63,9 @@
   v1.57 — Removido o "voltar pro topo" automático ao digitar em qualquer campo (a tela agora fica exatamente onde você estava); indicador de progresso nas próprias abas: um selo verde com "✓" aparece em "1. Relatório", "2. Assinar" e "3. Enviar" assim que cada etapa é concluída nesta sessão; campos de RE (parceiro, policial que faltou, remanejamento/reforço) agora formatam sozinhos no padrão 123456-7, aceitando só números e travando no tamanho certo; nova aba "Histórico de envios" (botão na aba Enviar) guardando data/hora, assunto, anexos e status (confirmado ou não) de cada e-mail mandado nesta sessão
   v1.58 — Aviso bem visível de "MODO TESTE" ou "MODO REAL" na aba Enviar e no cartão de revisão, conferido direto no Apps Script (novo endpoint de status) antes de mostrar qualquer coisa — pra nunca mais restar dúvida se o envio vai só pro seu Gmail pessoal ou de verdade pro CPA/M-1, mesmo o texto de destinatário mostrando sempre o endereço oficial
   v1.59 — Corrigido: só deixa gerar o PDF (Relatório ou Parte de Falta) se o(s) RE(s) daquele documento estiverem completos (6 números + o dígito, ex: 142113-1); se estiver faltando dígito, avisa exatamente em qual campo e não deixa passar
+  v1.60 — Assunto e corpo do e-mail ajustados: data no formato 29/09/2026 (antes vinha por extenso) e nome do metrô só com a primeira letra maiúscula (ex: Liberdade, antes vinha LIBERDADE); remetente do e-mail trocado de "Gerador DEJEM" pra "Thiago Costa" (precisa colar o código novo do Apps Script e implantar de novo)
+  v1.61 — Fim do "modo teste" fixo no código: nova seção "Destinatários" na aba Enviar, com caixinha pra marcar pra quem vai cada envio e um jeito de adicionar (ou remover) e-mails quando quiser, salvo no aparelho; histórico de envios agora também mostra pra quem cada e-mail foi; texto de "Buscar escala na intranet" reescrito, mais direto; removido o texto explicativo de "Documentos para anexar" (o sistema já destaca em vermelho o que falta, não precisa repetir em texto) — precisa colar o código novo do Apps Script e implantar de novo
+  v1.62 — Botão "Enviar e-mail" agora mostra quantos destinatários estão marcados, ex: "Enviar e-mail (2)"; novo link "Marcar todos"/"Desmarcar todos" em cima da lista de Destinatários; cada destinatário agora mostra a data do último envio pra ele (hoje/ontem/dd-mm); novo botão "Duplicar" no topo da aba Relatório que repete estação, ID e situação do último relatório gerado na mesma sessão, sem precisar digitar tudo de novo
 -->
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover, interactive-widget=resizes-content">
@@ -208,7 +211,7 @@
     color: var(--ink-soft);
     margin-bottom: 5px;
   }
-  input[type="text"], input[type="date"], input[type="time"], input[type="number"], select {
+  input[type="text"], input[type="date"], input[type="time"], input[type="number"], input[type="email"], select {
     width: 100%;
     padding: 9px 10px;
     border: 1px solid var(--line);
@@ -429,6 +432,39 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
+  }
+  .destinatarios-toolbar {
+    display: flex;
+    justify-content: flex-end;
+    margin: -6px 0 4px;
+  }
+  .texto-acao {
+    appearance: none;
+    border: none;
+    background: transparent;
+    color: var(--accent-soft);
+    font-family: 'Courier New', monospace;
+    font-size: 11px;
+    text-decoration: underline;
+    cursor: pointer;
+    padding: 4px 2px;
+  }
+  .texto-acao:active { opacity: 0.6; }
+  .duplicar-aviso {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 10px 14px;
+    border: 1px dashed var(--accent-soft);
+    border-radius: 8px;
+    background: var(--paper-dark);
+    font-family: 'Courier New', monospace;
+    font-size: 12px;
+    color: var(--ink-soft);
+  }
+  .duplicar-aviso button {
+    flex-shrink: 0;
   }
   [hidden] { display: none !important; }
   .seg {
@@ -748,41 +784,29 @@
     overflow: auto;
   }
 
-  /* Aviso de modo teste/real do envio de e-mail */
-  .modo-envio-aviso {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    border-radius: 8px;
-    border: 1px solid var(--line);
-    padding: 10px 12px;
-    margin-bottom: 18px;
-    font-size: 13px;
-    line-height: 1.4;
-  }
-  .modo-envio-aviso::before {
-    content: '';
-    width: 8px;
-    height: 8px;
-    min-width: 8px;
-    border-radius: 50%;
-    background: currentColor;
-  }
-  .modo-envio-aviso.teste {
-    color: var(--accent-soft);
-    border-color: var(--accent-soft);
-    background: rgba(34, 230, 160, 0.08);
-  }
-  .modo-envio-aviso.real {
+  /* Lista de destinatários do e-mail */
+  .check-row .destinatario-remover {
+    appearance: none;
+    border: none;
+    background: none;
     color: #ff9188;
-    border-color: #ff9188;
-    background: rgba(255, 91, 76, 0.1);
-    font-weight: 700;
+    font-size: 19px;
+    line-height: 1;
+    cursor: pointer;
+    padding: 0 2px;
+    flex-shrink: 0;
   }
-  .modo-envio-aviso.desconhecido {
-    color: #d9a441;
-    border-color: #d9a441;
-    background: rgba(217, 164, 65, 0.1);
+  .check-row .destinatario-remover:active { color: #ff6b5b; }
+  .destinatario-add {
+    display: flex;
+    gap: 8px;
+    margin-top: 12px;
+  }
+  .destinatario-add input { margin: 0; }
+  .destinatario-add .secondary-btn {
+    flex-shrink: 0;
+    width: auto;
+    padding-inline: 16px;
   }
 
   /* Botão "Histórico de envios" e o selo com a contagem */
@@ -866,6 +890,11 @@
     font-size: 11px;
     color: var(--ink-soft);
     white-space: nowrap;
+  }
+  .historico-item-para {
+    font-size: 12px;
+    color: var(--ink-soft);
+    word-break: break-word;
   }
   .historico-item-status {
     font-family: 'Courier New', monospace;
@@ -971,7 +1000,7 @@
 </div>
 <div class="wrap">
   <header>
-    <span class="version-tag">v1.59</span>
+    <span class="version-tag">v1.62</span>
     <div class="header-brand">
       <img src="data:image/png;base64,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" alt="" class="header-logo">
       <div>
@@ -989,6 +1018,10 @@
   </div>
 
   <div id="panel-relatorio" class="panel">
+  <div class="duplicar-aviso" id="duplicarAviso" hidden>
+    <span>Repetir estação/ID/situação do último relatório desta sessão?</span>
+    <button type="button" id="duplicarUltimoBtn" class="secondary-btn">Duplicar</button>
+  </div>
   <form id="form">
     <fieldset>
       <legend>Data e horário</legend>
@@ -1245,7 +1278,7 @@
         </div>
         <div>
           <button type="button" id="abrirEscalaIntranetBtn" class="secondary-btn block-btn">Pesquisar Escala</button>
-          <p class="hint">Só funciona já conectado na rede interna da PM (ou na VPN pelo AnyConnect). Abre o PDF em uma aba nova, sem fechar o app: toque no ícone de compartilhar e em "Salvar em Arquivos", depois volte aqui — o campo "Escala para assinar" ali embaixo já vai estar destacado esperando o anexo.</p>
+          <p class="hint">Para pesquisar as escalas, conecte-se pela VPN AnyConnect. Ao abrir o PDF, toque no ícone de compartilhar e em "Salvar em Arquivos" — depois é só anexar no campo "Escala para assinar" abaixo.</p>
           <p class="status" id="statusEscalaIntranet" role="status" aria-live="polite"></p>
         </div>
       </div>
@@ -1286,10 +1319,6 @@
       <span class="historico-badge" id="historicoBadge" hidden>0</span>
     </button>
 
-    <div class="modo-envio-aviso" id="modoEnvioAviso" hidden>
-      <span id="modoEnvioTexto"></span>
-    </div>
-
     <fieldset>
       <legend>Documentos para anexar</legend>
       <div class="stack" id="listaAnexos">
@@ -1312,7 +1341,19 @@
           <span class="check-status" id="statusAnexoEscala">não gerada</span>
         </div>
       </div>
-      <p class="hint">Marcado sozinho assim que você gera o documento nas outras abas, nesta mesma sessão (sem precisar gerar de novo). A escala assinada é obrigatória em todo envio; se o Relatório for "Fui remanejado" ou "Fui reforçado", a Parte de Falta também é obrigatória.</p>
+    </fieldset>
+
+    <fieldset>
+      <legend>Destinatários</legend>
+      <div class="destinatarios-toolbar">
+        <button type="button" id="marcarTodosDestinatariosBtn" class="texto-acao">Marcar todos</button>
+      </div>
+      <div class="stack" id="listaDestinatarios"></div>
+      <div class="destinatario-add">
+        <input type="email" id="novoDestinatarioEmail" autocomplete="off" inputmode="email" placeholder="novo@email.com">
+        <button type="button" id="adicionarDestinatarioBtn" class="secondary-btn">Adicionar</button>
+      </div>
+      <p class="status" id="statusDestinatarios" role="status" aria-live="polite"></p>
     </fieldset>
 
     <fieldset>
@@ -1357,9 +1398,6 @@
 <div id="revisaoEmailOverlay" class="confirm-overlay" hidden>
   <div class="confirm-box revisao-box" role="alertdialog" aria-modal="true" aria-labelledby="revisaoTitulo">
     <p class="revisao-titulo" id="revisaoTitulo">Conferir antes de enviar</p>
-    <div class="modo-envio-aviso" id="revisaoModoEnvioAviso" hidden>
-      <span id="revisaoModoEnvioTexto"></span>
-    </div>
     <div class="revisao-linha">
       <span class="revisao-rotulo">Para</span>
       <span class="revisao-valor" id="revisaoPara"></span>
@@ -1432,6 +1470,12 @@ popularEstacoes(document.getElementById('estacaoOrigem'));
 function formatDate(iso) {
   const [y, m, d] = iso.split('-').map(Number);
   return `${d} ${MESES[m-1]} ${y}`;
+}
+
+// Só pro e-mail (assunto e corpo): dd/mm/aaaa, ex: 29/09/2026.
+function formatDateBarra(iso) {
+  const [y, m, d] = iso.split('-').map(Number);
+  return `${pad(d)}/${pad(m)}/${y}`;
 }
 
 function pad(n) { return String(n).padStart(2, '0'); }
@@ -1558,6 +1602,16 @@ document.getElementById('segCompareceu').addEventListener('click', () => escolhe
 document.getElementById('segRemanejado').addEventListener('click', () => escolherSituacao('remanejado'));
 document.getElementById('segReforco').addEventListener('click', () => escolherSituacao('reforco'));
 
+document.getElementById('duplicarUltimoBtn').addEventListener('click', function() {
+  if (!ultimoRelatorioCampos) return;
+  escolherTipoDocumento('relatorio');
+  document.getElementById('turno').value = ultimoRelatorioCampos.turno;
+  document.getElementById('estacao').value = ultimoRelatorioCampos.estacaoValue;
+  document.getElementById('idServico').value = ultimoRelatorioCampos.idServico;
+  escolherSituacao(ultimoRelatorioCampos.situacao);
+  vibrarSuave();
+});
+
 // --- Reset completo do site (chamado no carregamento e toda vez que a aba/atalho é reaberto) ---
 function resetFormState() {
   // Relatório DEJEM
@@ -1611,14 +1665,11 @@ function resetFormState() {
 
   // Enviar E-mail
   ultimosDocumentos = { relatorio: null, parte: null, escala: null };
+  ultimoRelatorioCampos = null;
+  if (typeof atualizarBotaoDuplicar === 'function') atualizarBotaoDuplicar();
   ultimoAssuntoAuto = null;
   ultimaMensagemAuto = null;
   emailEnviadoConfirmado = false;
-  modoTesteAtivo = null;
-  const modoEnvioAviso = document.getElementById('modoEnvioAviso');
-  if (modoEnvioAviso) modoEnvioAviso.hidden = true;
-  const revisaoModoEnvioAviso = document.getElementById('revisaoModoEnvioAviso');
-  if (revisaoModoEnvioAviso) revisaoModoEnvioAviso.hidden = true;
   if (typeof atualizarChecklistAnexos === 'function') atualizarChecklistAnexos();
   const assuntoEmail = document.getElementById('assuntoEmail');
   if (assuntoEmail) assuntoEmail.value = '';
@@ -1690,13 +1741,19 @@ function vibrarSuave(padrao) {
 
 // --- Enviar E-mail: guarda os últimos PDFs gerados nesta sessão, prontos pra anexar ---
 let ultimosDocumentos = { relatorio: null, parte: null, escala: null };
+let ultimoRelatorioCampos = null; // { data, turno, idServico, estacaoValue, situacao } do último Relatório gerado nesta sessão
+
+function atualizarBotaoDuplicar() {
+  const aviso = document.getElementById('duplicarAviso');
+  if (aviso) aviso.hidden = !ultimoRelatorioCampos;
+}
 let ultimoAssuntoAuto = null;
 let ultimaMensagemAuto = null;
 let emailEnviadoConfirmado = false; // pra marcar a etapa "3. Enviar" como concluída no indicador de progresso
 let historicoEnvios = []; // {dataHora, assunto, anexos: [nomes], confirmado} — só durante esta sessão
 
-function registrarHistoricoEnvio({ assunto, anexos, confirmado }) {
-  historicoEnvios.unshift({ dataHora: new Date(), assunto, anexos, confirmado });
+function registrarHistoricoEnvio({ assunto, anexos, confirmado, destinatarios: paraQuem }) {
+  historicoEnvios.unshift({ dataHora: new Date(), assunto, anexos, confirmado, destinatarios: paraQuem || [] });
   atualizarHistoricoEnvios();
 }
 
@@ -1731,11 +1788,13 @@ function atualizarHistoricoEnvios() {
         <span class="historico-item-assunto"></span>
         <span class="historico-item-hora"></span>
       </div>
+      <span class="historico-item-para"></span>
       <div class="revisao-anexos">${anexosHtml}</div>
       <span class="historico-item-status ${statusClasse}"></span>
     `;
     div.querySelector('.historico-item-assunto').textContent = item.assunto || '(sem assunto)';
     div.querySelector('.historico-item-hora').textContent = hora;
+    div.querySelector('.historico-item-para').textContent = (item.destinatarios || []).join(', ') || '—';
     div.querySelector('.historico-item-status').textContent = statusTexto;
     listaEl.appendChild(div);
   });
@@ -1820,24 +1879,27 @@ document.getElementById('verEscala').addEventListener('click', () => abrirPdfDoc
 
 function montarAssuntoPadrao() {
   const dataVal = document.getElementById('data').value;
-  const dataFormatada = dataVal ? formatDate(dataVal) : '';
+  const dataFormatada = dataVal ? formatDateBarra(dataVal) : '';
   const estacaoValue = document.getElementById('estacao').value || '';
-  let assunto = `DEJEM Metrô${estacaoValue ? ' ' + estacaoValue : ''}`;
+  const estacaoObj = STATIONS.find(s => s.name === estacaoValue);
+  const estacaoTitle = estacaoObj ? estacaoObj.title : estacaoValue;
+  let assunto = `DEJEM Metrô${estacaoTitle ? ' ' + estacaoTitle : ''}`;
   if (dataFormatada) assunto += ` - ${dataFormatada}`;
   return assunto;
 }
 
 function montarMensagemPadrao() {
   const dataVal = document.getElementById('data').value;
-  const dataFormatada = dataVal ? formatDate(dataVal) : '__/__/____';
-  const estacaoValue = document.getElementById('estacao').value || '____________';
+  const dataFormatada = dataVal ? formatDateBarra(dataVal) : '__/__/____';
+  const estacaoValue = document.getElementById('estacao').value || '';
+  const estacaoObj = STATIONS.find(s => s.name === estacaoValue);
+  const estacaoTitle = estacaoObj ? estacaoObj.title : (estacaoValue || '____________');
   const idServicoValue = document.getElementById('idServico').value.trim() || '________';
-  return `ORDEM DE SERVIÇO N° CPAM1-058/30/25.\nDo Cmt Pol Área M-1.\nAssunto: Rotina de envio de relatórios - Atividade DEJEM Metrô CPA/M-1.\n\nData do Serviço: ${dataFormatada}\nMetrô: ${estacaoValue}\nID: N° ${idServicoValue}\nEncarregado: CB PM 142113-1 COSTA`;
+  return `ORDEM DE SERVIÇO N° CPAM1-058/30/25.\nDo Cmt Pol Área M-1.\nAssunto: Rotina de envio de relatórios - Atividade DEJEM Metrô CPA/M-1.\n\nData do Serviço: ${dataFormatada}\nMetrô: ${estacaoTitle}\nID: N° ${idServicoValue}\nEncarregado: CB PM 142113-1 COSTA`;
 }
 
 function prepararAbaEnviarEmail() {
   atualizarChecklistAnexos();
-  atualizarAvisoModoEnvio();
   const assuntoEl = document.getElementById('assuntoEmail');
   const mensagemEl = document.getElementById('mensagemEmail');
   const novoAssunto = montarAssuntoPadrao();
@@ -1952,6 +2014,7 @@ document.getElementById('enviarEmailBtn').addEventListener('click', async functi
 
   const assunto = document.getElementById('assuntoEmail').value.trim();
   const mensagem = document.getElementById('mensagemEmail').value.trim();
+  const destinatariosSelecionados = destinatarios.filter(d => d.marcado).map(d => d.email);
 
   if (!anexosSelecionados.length) {
     statusEl.textContent = 'Marque ao menos um documento pra anexar.';
@@ -1959,6 +2022,10 @@ document.getElementById('enviarEmailBtn').addEventListener('click', async functi
   }
   if (!mensagem) {
     statusEl.textContent = 'Escreva a mensagem do e-mail antes de enviar.';
+    return;
+  }
+  if (!destinatariosSelecionados.length) {
+    statusEl.textContent = 'Marque ao menos um destinatário antes de enviar.';
     return;
   }
 
@@ -1987,7 +2054,7 @@ document.getElementById('enviarEmailBtn').addEventListener('click', async functi
 
   esconderSucessoEnvio();
   const confirmarEnvio = await revisarEnvioEmail({
-    destinatario: 'cpam1dejemmetro@policiamilitar.sp.gov.br (cópia: thiago_costa1907@hotmail.com)',
+    destinatario: destinatariosSelecionados.join(', '),
     assunto,
     mensagem,
     anexos: anexosSelecionados.map(a => a.filename),
@@ -2006,7 +2073,7 @@ document.getElementById('enviarEmailBtn').addEventListener('click', async functi
     const resp = await fetch(`${APPS_SCRIPT_URL}?reqId=${encodeURIComponent(gerarReqId())}`, {
       method: 'POST',
       headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-      body: JSON.stringify({ assunto, mensagem, anexos: anexosSelecionados }),
+      body: JSON.stringify({ assunto, mensagem, anexos: anexosSelecionados, destinatarios: destinatariosSelecionados }),
     });
     const segundos = pararContador();
     if (!resp.ok) {
@@ -2019,15 +2086,21 @@ document.getElementById('enviarEmailBtn').addEventListener('click', async functi
       return;
     }
     const nomesAnexos = anexosSelecionados.map(a => a.filename);
+    const agoraIso = new Date().toISOString();
+    destinatarios.forEach(d => {
+      if (destinatariosSelecionados.includes(d.email)) d.ultimoEnvio = agoraIso;
+    });
+    salvarDestinatarios();
+    renderizarDestinatarios();
     if (data.confirmado) {
       statusEl.textContent = '';
       mostrarSucessoEnvio(`E-mail enviado e confirmado em Enviados (${segundos}s).`);
       vibrarSuave([15, 60, 15]);
       emailEnviadoConfirmado = true;
-      registrarHistoricoEnvio({ assunto, anexos: nomesAnexos, confirmado: true });
+      registrarHistoricoEnvio({ assunto, anexos: nomesAnexos, confirmado: true, destinatarios: destinatariosSelecionados });
     } else {
       statusEl.textContent = `E-mail enviado (${segundos}s), mas não consegui confirmar em Enviados ainda — confira o Gmail.`;
-      registrarHistoricoEnvio({ assunto, anexos: nomesAnexos, confirmado: false });
+      registrarHistoricoEnvio({ assunto, anexos: nomesAnexos, confirmado: false, destinatarios: destinatariosSelecionados });
     }
     atualizarIndicadorEtapas();
   } catch (err) {
@@ -2123,45 +2196,141 @@ function gerarReqId() {
   return 'r' + Date.now() + '_' + Math.random().toString(36).slice(2);
 }
 
-// Confere no próprio Apps Script se o envio está em modo teste (só cai no seu
-// Gmail pessoal) ou modo real (vai de verdade pro CPA/M-1), pra mostrar isso
-// bem claro na tela antes de qualquer envio — em vez de você ter que confiar
-// só no texto fixo "Para" do cartão de revisão.
-let modoTesteAtivo = null; // null = ainda não conferido, true = modo teste, false = modo real
+// --- Destinatários do e-mail: lista salva no aparelho (localStorage), com
+// caixinha pra marcar quem recebe cada envio e um jeito de adicionar novos
+// e-mails quando precisar. Substitui o antigo "modo teste" fixo no código.
+const DESTINATARIOS_STORAGE_KEY = 'dejem_destinatarios_v1';
+const DESTINATARIOS_PADRAO = [
+  { email: 'thiago_costa1907@hotmail.com', marcado: true },
+  { email: 'cpam1dejemmetro@policiamilitar.sp.gov.br', marcado: false },
+];
 
-async function conferirModoEnvio() {
+function carregarDestinatarios() {
   try {
-    const resp = await fetch(`${APPS_SCRIPT_URL}?action=status`);
-    if (!resp.ok) return null;
-    const data = await resp.json();
-    return typeof data.modoTeste === 'boolean' ? data.modoTeste : null;
-  } catch (err) {
-    return null;
-  }
+    const salvo = localStorage.getItem(DESTINATARIOS_STORAGE_KEY);
+    if (salvo) {
+      const lista = JSON.parse(salvo);
+      if (Array.isArray(lista) && lista.length) return lista;
+    }
+  } catch (err) { /* localStorage indisponível — segue com o padrão */ }
+  return DESTINATARIOS_PADRAO.map(d => ({ ...d }));
 }
 
-function renderAvisoModoEnvio(prefixoId) {
-  const aviso = document.getElementById(prefixoId + 'Aviso');
-  const texto = document.getElementById(prefixoId + 'Texto');
-  if (!aviso || !texto) return;
-  aviso.classList.remove('teste', 'real', 'desconhecido');
-  if (modoTesteAtivo === true) {
-    aviso.classList.add('teste');
-    texto.textContent = 'MODO TESTE — este e-mail vai só para o seu Gmail pessoal, não chega no CPA/M-1.';
-  } else if (modoTesteAtivo === false) {
-    aviso.classList.add('real');
-    texto.textContent = 'MODO REAL — este e-mail vai de verdade para o CPA/M-1 oficial.';
-  } else {
-    aviso.classList.add('desconhecido');
-    texto.textContent = 'Não consegui confirmar agora se o envio está em modo teste ou real — confira no Apps Script antes de enviar.';
-  }
-  aviso.hidden = false;
+let destinatarios = carregarDestinatarios();
+
+function salvarDestinatarios() {
+  try {
+    localStorage.setItem(DESTINATARIOS_STORAGE_KEY, JSON.stringify(destinatarios));
+  } catch (err) { /* localStorage indisponível — a lista some ao reabrir, sem problema */ }
 }
 
-async function atualizarAvisoModoEnvio() {
-  modoTesteAtivo = await conferirModoEnvio();
-  renderAvisoModoEnvio('modoEnvio');
+// Formata a data/hora do último envio de forma curta e legível (hoje/ontem/dd/mm).
+function formatarUltimoEnvio(iso) {
+  if (!iso) return '';
+  const d = new Date(iso);
+  if (isNaN(d.getTime())) return '';
+  const agora = new Date();
+  const hoje = agora.toDateString() === d.toDateString();
+  const ontemData = new Date(agora);
+  ontemData.setDate(ontemData.getDate() - 1);
+  const ontem = ontemData.toDateString() === d.toDateString();
+  const hora = String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0');
+  if (hoje) return `último envio: hoje ${hora}`;
+  if (ontem) return `último envio: ontem ${hora}`;
+  const dia = String(d.getDate()).padStart(2, '0');
+  const mes = String(d.getMonth() + 1).padStart(2, '0');
+  return `último envio: ${dia}/${mes} ${hora}`;
 }
+
+function atualizarContagemEnvio() {
+  const btn = document.getElementById('enviarEmailBtn');
+  if (!btn) return;
+  const n = destinatarios.filter(d => d.marcado).length;
+  btn.textContent = n ? `Enviar e-mail (${n})` : 'Enviar e-mail';
+}
+
+function atualizarBotaoMarcarTodos() {
+  const btn = document.getElementById('marcarTodosDestinatariosBtn');
+  if (!btn) return;
+  const todosMarcados = destinatarios.length > 0 && destinatarios.every(d => d.marcado);
+  btn.textContent = todosMarcados ? 'Desmarcar todos' : 'Marcar todos';
+}
+
+function renderizarDestinatarios() {
+  const container = document.getElementById('listaDestinatarios');
+  if (!container) return;
+  container.innerHTML = '';
+  destinatarios.forEach((d, indice) => {
+    const linha = document.createElement('div');
+    linha.className = 'check-row' + (d.marcado ? ' disponivel' : '');
+    linha.innerHTML = `
+      <input type="checkbox" id="destinatarioCheck${indice}">
+      <label for="destinatarioCheck${indice}" class="check-label"></label>
+      <span class="check-status"></span>
+      <button type="button" class="destinatario-remover" aria-label="Remover">&times;</button>
+    `;
+    linha.querySelector('.check-label').textContent = d.email;
+    const statusSpan = linha.querySelector('.check-status');
+    const textoUltimoEnvio = formatarUltimoEnvio(d.ultimoEnvio);
+    if (textoUltimoEnvio) {
+      statusSpan.textContent = textoUltimoEnvio;
+    } else {
+      statusSpan.remove();
+    }
+    const checkEl = linha.querySelector('input[type="checkbox"]');
+    checkEl.checked = d.marcado;
+    checkEl.addEventListener('change', function() {
+      destinatarios[indice].marcado = checkEl.checked;
+      linha.classList.toggle('disponivel', checkEl.checked);
+      salvarDestinatarios();
+      atualizarContagemEnvio();
+      atualizarBotaoMarcarTodos();
+    });
+    linha.querySelector('.destinatario-remover').addEventListener('click', function() {
+      destinatarios.splice(indice, 1);
+      salvarDestinatarios();
+      renderizarDestinatarios();
+    });
+    container.appendChild(linha);
+  });
+  atualizarContagemEnvio();
+  atualizarBotaoMarcarTodos();
+}
+
+document.getElementById('marcarTodosDestinatariosBtn').addEventListener('click', function() {
+  const todosMarcados = destinatarios.length > 0 && destinatarios.every(d => d.marcado);
+  destinatarios.forEach(d => { d.marcado = !todosMarcados; });
+  salvarDestinatarios();
+  renderizarDestinatarios();
+});
+
+document.getElementById('adicionarDestinatarioBtn').addEventListener('click', function() {
+  const inputEl = document.getElementById('novoDestinatarioEmail');
+  const statusEl = document.getElementById('statusDestinatarios');
+  const email = inputEl.value.trim();
+  if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    statusEl.textContent = 'Digite um e-mail válido.';
+    return;
+  }
+  if (destinatarios.some(d => d.email.toLowerCase() === email.toLowerCase())) {
+    statusEl.textContent = 'Esse e-mail já está na lista.';
+    return;
+  }
+  destinatarios.push({ email, marcado: true });
+  salvarDestinatarios();
+  renderizarDestinatarios();
+  inputEl.value = '';
+  statusEl.textContent = '';
+});
+
+document.getElementById('novoDestinatarioEmail').addEventListener('keydown', function(e) {
+  if (e.key === 'Enter') {
+    e.preventDefault();
+    document.getElementById('adicionarDestinatarioBtn').click();
+  }
+});
+
+renderizarDestinatarios();
 
 function mensagemErroPlanilha(err) {
   if (typeof navigator !== 'undefined' && navigator.onLine === false) {
@@ -2266,13 +2435,7 @@ function confirmarCustom(mensagem, opcoes) {
 
 // Tela de revisão final antes de enviar o e-mail: mostra destinatário, assunto,
 // anexos (como chips) e um preview da mensagem, num cartão só.
-async function revisarEnvioEmail({ destinatario, assunto, mensagem, anexos }) {
-  // Confere de novo, na hora, se é modo teste ou modo real — é a última checagem
-  // antes do toque em "Confirmar e enviar".
-  modoTesteAtivo = await conferirModoEnvio();
-  renderAvisoModoEnvio('modoEnvio');
-  renderAvisoModoEnvio('revisaoModoEnvio');
-
+function revisarEnvioEmail({ destinatario, assunto, mensagem, anexos }) {
   return new Promise((resolve) => {
     const overlay = document.getElementById('revisaoEmailOverlay');
     document.getElementById('revisaoPara').textContent = destinatario;
@@ -2801,6 +2964,10 @@ document.getElementById('form').addEventListener('submit', async function(e) {
       base64: pdfBase64, fileName, geradoEm: new Date(),
       situacao: ehParte ? null : situacaoRelatorio,
     };
+    if (!ehParte) {
+      ultimoRelatorioCampos = { turno: document.getElementById('turno').value, idServico, estacaoValue, situacao: situacaoRelatorio };
+      atualizarBotaoDuplicar();
+    }
     atualizarChecklistAnexos();
     statusEl.textContent = `PDF pronto: ${fileName}. Vá em "Enviar E-mail" pra conferir e mandar.`;
   } catch (err) {
@@ -2833,7 +3000,7 @@ resetFormState();
 // (o iPhone mantém o atalho da tela inicial "suspenso" em vez de recarregar sozinho,
 // então esse é o jeito de avisar que uma atualização está disponível sem precisar
 // remover e adicionar o atalho de novo)
-const CURRENT_VERSION = 'v1.59';
+const CURRENT_VERSION = 'v1.62';
 let operacaoEmAndamento = false;
 
 async function checkForUpdate() {
