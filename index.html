@@ -60,6 +60,7 @@
   v1.54 — "Escala para assinar" ganhou o mesmo visual de confirmação já usado em "Enviar E-mail": ao anexar o PDF aparece o nome do arquivo com selo "anexado" e um link "Ver PDF" pra conferir antes de assinar; se você usar "Pesquisar Escala" e voltar pro site sem ter anexado ainda, o quadro da escala pulsa em verde pra lembrar; corrigido o espaço vazio que sobrava embaixo na tela depois que o teclado do iPhone fechava (o site agora volta pro topo sozinho, como um app de verdade, em vez de deixar aquele vão em branco)
   v1.55 — Corrigido bug grave introduzido na v1.54: o site travava na tela cinza de carregamento e não abria de jeito nenhum (uma variável nova estava sendo usada antes de ser criada, o que quebrava todo o script logo no início)
   v1.56 — Ajuste em "Pesquisar Escala": não é possível pegar o PDF automaticamente da intranet da PM (o site do governo não permite; teria que ser feito por fora, sem o app poder ler o arquivo sozinho), mas agora ao voltar da aba que abriu o PDF a tela já rola sozinha até o campo "Escala para assinar", destacado, pronto pra você anexar; texto de ajuda explicando melhor o passo a passo (compartilhar → Salvar em Arquivos → voltar e anexar)
+  v1.57 — Removido o "voltar pro topo" automático ao digitar em qualquer campo (a tela agora fica exatamente onde você estava); indicador de progresso nas próprias abas: um selo verde com "✓" aparece em "1. Relatório", "2. Assinar" e "3. Enviar" assim que cada etapa é concluída nesta sessão; campos de RE (parceiro, policial que faltou, remanejamento/reforço) agora formatam sozinhos no padrão 123456-7, aceitando só números e travando no tamanho certo; nova aba "Histórico de envios" (botão na aba Enviar) guardando data/hora, assunto, anexos e status (confirmado ou não) de cada e-mail mandado nesta sessão
 -->
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover, interactive-widget=resizes-content">
@@ -365,6 +366,26 @@
     transition: transform 0.12s ease, background 0.15s ease;
   }
   .tab-btn:active { transform: translateY(2px); }
+  .tab-btn { position: relative; }
+  .tab-btn.step-done::after {
+    content: '✓';
+    position: absolute;
+    top: -7px;
+    right: -7px;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: var(--accent);
+    color: var(--paper);
+    font-family: Arial, sans-serif;
+    font-size: 11px;
+    font-weight: 900;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 2px solid var(--paper);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+  }
   .tab-btn.active {
     background: var(--accent);
     color: var(--white);
@@ -725,6 +746,108 @@
     overflow: auto;
   }
 
+  /* Botão "Histórico de envios" e o selo com a contagem */
+  .historico-abrir-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    margin-bottom: 18px;
+  }
+  .historico-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 18px;
+    height: 18px;
+    padding: 0 5px;
+    border-radius: 999px;
+    background: var(--accent);
+    color: var(--paper);
+    font-family: 'Courier New', monospace;
+    font-size: 11px;
+    font-weight: 700;
+  }
+
+  /* Histórico de envios (aba Enviar E-mail) */
+  .historico-box { max-width: 420px; text-align: left; max-height: 82vh; display: flex; flex-direction: column; }
+  .historico-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 10px;
+    margin-bottom: 14px;
+  }
+  .historico-header .revisao-titulo { margin: 0; }
+  .historico-fechar {
+    appearance: none;
+    border: none;
+    background: none;
+    color: var(--ink-soft);
+    font-size: 24px;
+    line-height: 1;
+    cursor: pointer;
+    padding: 0 2px;
+  }
+  .historico-fechar:active { color: var(--ink); }
+  .historico-lista {
+    display: grid;
+    gap: 10px;
+    overflow-y: auto;
+    padding-right: 2px;
+  }
+  .historico-vazio {
+    font-size: 13px;
+    color: var(--ink-soft);
+    text-align: center;
+    padding: 26px 0;
+    margin: 0;
+  }
+  .historico-item {
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 12px;
+    background: var(--paper-dark);
+    display: grid;
+    gap: 7px;
+  }
+  .historico-item-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 10px;
+  }
+  .historico-item-assunto {
+    font-size: 14px;
+    color: var(--ink);
+    font-weight: 700;
+  }
+  .historico-item-hora {
+    font-family: 'Courier New', monospace;
+    font-size: 11px;
+    color: var(--ink-soft);
+    white-space: nowrap;
+  }
+  .historico-item-status {
+    font-family: 'Courier New', monospace;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    width: fit-content;
+  }
+  .historico-item-status::before {
+    content: '';
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: currentColor;
+  }
+  .historico-item-status.confirmado { color: var(--accent-soft); }
+  .historico-item-status.enviado { color: #d9a441; }
+
   /* Indicador de sucesso do envio */
   .sucesso-envio {
     display: flex;
@@ -809,7 +932,7 @@
 </div>
 <div class="wrap">
   <header>
-    <span class="version-tag">v1.56</span>
+    <span class="version-tag">v1.57</span>
     <div class="header-brand">
       <img src="data:image/png;base64,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" alt="" class="header-logo">
       <div>
@@ -1119,6 +1242,11 @@
       </div>
     </div>
 
+    <button type="button" id="historicoAbrirBtn" class="secondary-btn block-btn historico-abrir-btn">
+      Histórico de envios
+      <span class="historico-badge" id="historicoBadge" hidden>0</span>
+    </button>
+
     <fieldset>
       <legend>Documentos para anexar</legend>
       <div class="stack" id="listaAnexos">
@@ -1205,6 +1333,18 @@
     <div class="confirm-actions">
       <button type="button" class="secondary-btn" id="revisaoCancelarBtn">Voltar e editar</button>
       <button type="button" id="revisaoEnviarBtn">Confirmar e enviar</button>
+    </div>
+  </div>
+</div>
+
+<div id="historicoOverlay" class="confirm-overlay" hidden>
+  <div class="confirm-box historico-box" role="alertdialog" aria-modal="true" aria-labelledby="historicoTitulo">
+    <div class="historico-header">
+      <p class="revisao-titulo" id="historicoTitulo">Histórico de envios</p>
+      <button type="button" class="historico-fechar" id="historicoFecharBtn" aria-label="Fechar">&times;</button>
+    </div>
+    <div class="historico-lista" id="historicoLista">
+      <p class="historico-vazio" id="historicoVazio">Nenhum e-mail enviado ainda nesta sessão.</p>
     </div>
   </div>
 </div>
@@ -1328,6 +1468,25 @@ function escolherTipoDocumento(tipo) {
   atualizarLayout();
 }
 
+// Máscara do RE: só dígitos, no máximo 6 + o dígito verificador (ex: 142113-1).
+function mascararRE(valor) {
+  const digitos = valor.replace(/\D/g, '').slice(0, 7);
+  if (digitos.length <= 6) return digitos;
+  return digitos.slice(0, 6) + '-' + digitos.slice(6);
+}
+['parceiroRE', 'faltaRE', 'policial1RE', 'policial2RE', 'reforcoRE'].forEach(function(id) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.setAttribute('maxlength', '8');
+  el.addEventListener('input', function() {
+    const noFim = this.selectionEnd === this.value.length;
+    this.value = mascararRE(this.value);
+    if (noFim) {
+      this.selectionStart = this.selectionEnd = this.value.length;
+    }
+  });
+});
+
 function escolherSituacao(situacao) {
   situacaoRelatorio = situacao;
   atualizarLayout();
@@ -1395,6 +1554,7 @@ function resetFormState() {
   ultimosDocumentos = { relatorio: null, parte: null, escala: null };
   ultimoAssuntoAuto = null;
   ultimaMensagemAuto = null;
+  emailEnviadoConfirmado = false;
   if (typeof atualizarChecklistAnexos === 'function') atualizarChecklistAnexos();
   const assuntoEmail = document.getElementById('assuntoEmail');
   if (assuntoEmail) assuntoEmail.value = '';
@@ -1408,6 +1568,8 @@ function resetFormState() {
   if (confirmOverlay) confirmOverlay.hidden = true;
   const revisaoEmailOverlay = document.getElementById('revisaoEmailOverlay');
   if (revisaoEmailOverlay) revisaoEmailOverlay.hidden = true;
+  const historicoOverlay = document.getElementById('historicoOverlay');
+  if (historicoOverlay) historicoOverlay.hidden = true;
 
   // Sempre volta para a primeira aba
   if (typeof showTab === 'function') showTab('relatorio');
@@ -1466,6 +1628,63 @@ function vibrarSuave(padrao) {
 let ultimosDocumentos = { relatorio: null, parte: null, escala: null };
 let ultimoAssuntoAuto = null;
 let ultimaMensagemAuto = null;
+let emailEnviadoConfirmado = false; // pra marcar a etapa "3. Enviar" como concluída no indicador de progresso
+let historicoEnvios = []; // {dataHora, assunto, anexos: [nomes], confirmado} — só durante esta sessão
+
+function registrarHistoricoEnvio({ assunto, anexos, confirmado }) {
+  historicoEnvios.unshift({ dataHora: new Date(), assunto, anexos, confirmado });
+  atualizarHistoricoEnvios();
+}
+
+function atualizarHistoricoEnvios() {
+  const listaEl = document.getElementById('historicoLista');
+  const vazioEl = document.getElementById('historicoVazio');
+  const badgeEl = document.getElementById('historicoBadge');
+  if (badgeEl) {
+    if (historicoEnvios.length) {
+      badgeEl.textContent = historicoEnvios.length;
+      badgeEl.hidden = false;
+    } else {
+      badgeEl.hidden = true;
+    }
+  }
+  if (!listaEl || !vazioEl) return;
+  listaEl.querySelectorAll('.historico-item').forEach(el => el.remove());
+  if (!historicoEnvios.length) {
+    vazioEl.hidden = false;
+    return;
+  }
+  vazioEl.hidden = true;
+  historicoEnvios.forEach(item => {
+    const div = document.createElement('div');
+    div.className = 'historico-item';
+    const hora = item.dataHora.toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
+    const anexosHtml = item.anexos.map(nome => `<span class="revisao-anexo-chip">${nome}</span>`).join('');
+    const statusClasse = item.confirmado ? 'confirmado' : 'enviado';
+    const statusTexto = item.confirmado ? 'confirmado em enviados' : 'enviado (sem confirmação)';
+    div.innerHTML = `
+      <div class="historico-item-top">
+        <span class="historico-item-assunto"></span>
+        <span class="historico-item-hora"></span>
+      </div>
+      <div class="revisao-anexos">${anexosHtml}</div>
+      <span class="historico-item-status ${statusClasse}"></span>
+    `;
+    div.querySelector('.historico-item-assunto').textContent = item.assunto || '(sem assunto)';
+    div.querySelector('.historico-item-hora').textContent = hora;
+    div.querySelector('.historico-item-status').textContent = statusTexto;
+    listaEl.appendChild(div);
+  });
+}
+
+function atualizarIndicadorEtapas() {
+  const passo1 = !!(ultimosDocumentos.relatorio || ultimosDocumentos.parte);
+  const passo2 = !!ultimosDocumentos.escala;
+  const passo3 = !!emailEnviadoConfirmado;
+  if (tabRelatorioBtn) tabRelatorioBtn.classList.toggle('step-done', passo1);
+  if (tabAssinarBtn) tabAssinarBtn.classList.toggle('step-done', passo2);
+  if (tabEnviarBtn) tabEnviarBtn.classList.toggle('step-done', passo3);
+}
 
 function atualizarChecklistAnexos() {
   const relatorioDoc = ultimosDocumentos.relatorio;
@@ -1518,6 +1737,8 @@ function atualizarChecklistAnexos() {
     fillEl.style.width = pct + '%';
     textoEl.textContent = `${prontos} de ${totalObrigatorios} documentos prontos`;
   }
+
+  atualizarIndicadorEtapas();
 }
 
 function abrirPdfDocumento(chave) {
@@ -1732,13 +1953,18 @@ document.getElementById('enviarEmailBtn').addEventListener('click', async functi
       statusEl.textContent = data.error;
       return;
     }
+    const nomesAnexos = anexosSelecionados.map(a => a.filename);
     if (data.confirmado) {
       statusEl.textContent = '';
       mostrarSucessoEnvio(`E-mail enviado e confirmado em Enviados (${segundos}s).`);
       vibrarSuave([15, 60, 15]);
+      emailEnviadoConfirmado = true;
+      registrarHistoricoEnvio({ assunto, anexos: nomesAnexos, confirmado: true });
     } else {
       statusEl.textContent = `E-mail enviado (${segundos}s), mas não consegui confirmar em Enviados ainda — confira o Gmail.`;
+      registrarHistoricoEnvio({ assunto, anexos: nomesAnexos, confirmado: false });
     }
+    atualizarIndicadorEtapas();
   } catch (err) {
     statusEl.textContent = mensagemErroEnvioEmail(err);
     console.error(err);
@@ -1969,6 +2195,18 @@ function revisarEnvioEmail({ destinatario, assunto, mensagem, anexos }) {
     cancelarBtn.addEventListener('click', onCancel);
   });
 }
+
+// Histórico de envios (guardado só durante a sessão, some ao reabrir o app).
+document.getElementById('historicoAbrirBtn').addEventListener('click', function() {
+  atualizarHistoricoEnvios();
+  document.getElementById('historicoOverlay').hidden = false;
+});
+document.getElementById('historicoFecharBtn').addEventListener('click', function() {
+  document.getElementById('historicoOverlay').hidden = true;
+});
+document.getElementById('historicoOverlay').addEventListener('click', function(e) {
+  if (e.target === this) this.hidden = true;
+});
 
 // Indicador de sucesso (check verde animado) depois do envio confirmado em Enviados.
 function mostrarSucessoEnvio(mensagem) {
@@ -2461,7 +2699,7 @@ resetFormState();
 // (o iPhone mantém o atalho da tela inicial "suspenso" em vez de recarregar sozinho,
 // então esse é o jeito de avisar que uma atualização está disponível sem precisar
 // remover e adicionar o atalho de novo)
-const CURRENT_VERSION = 'v1.56';
+const CURRENT_VERSION = 'v1.57';
 let operacaoEmAndamento = false;
 
 async function checkForUpdate() {
@@ -2508,28 +2746,6 @@ window.addEventListener('pageshow', function(event) {
   }
   checkForUpdate();
 });
-
-// Corrige o espaço vazio que sobra na parte de baixo da tela quando o teclado
-// do iPhone fecha (o Safari às vezes não devolve a página para o topo sozinho).
-(function() {
-  let ajusteScrollPendente = null;
-  function ajustarScrollAposTeclado() {
-    if (ajusteScrollPendente) clearTimeout(ajusteScrollPendente);
-    ajusteScrollPendente = setTimeout(function() {
-      if (document.activeElement && (document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'TEXTAREA' || document.activeElement.tagName === 'SELECT')) return;
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    }, 120);
-  }
-  document.addEventListener('focusout', function(e) {
-    const tag = e.target && e.target.tagName;
-    if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') {
-      ajustarScrollAposTeclado();
-    }
-  });
-  if (window.visualViewport) {
-    window.visualViewport.addEventListener('resize', ajustarScrollAposTeclado);
-  }
-})();
 
 document.addEventListener('visibilitychange', function() {
   if (document.visibilityState === 'hidden') {
