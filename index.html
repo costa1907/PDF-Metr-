@@ -83,6 +83,7 @@
   v1.77 — Removida a mensagem de confirmação ("o AnyConnect já está conectado?") ao clicar em "Pesquisar Escala" — agora o botão abre a página da intranet direto, sem perguntar nada antes
   v1.78 — O campo "Número do ID" da escala agora só aceita números, com máscara limitando a quantidade de dígitos ao mesmo tamanho do exemplo mostrado no campo (ex: 8800854, 7 dígitos)
   v1.79 — "Número do Relatório", "Número da Parte de Falta", os dois campos de "Ano" e o "ID do Serviço" agora só aceitam números, travando letras e símbolos igual já acontecia no RE
+  v1.80 — "Situação do relatório" renomeada: "Parceiro veio" -> "Sem novidades", "Fui remanejado" -> "Falta ao serviço | Remanejado", "Fui reforçado" -> "Falta ao serviço | Integrado a equipe" (só o texto mostrado muda, o PDF gerado continua igual); "Tipo de documento" trocou o menu suspenso por dois cartões grandes (Relatório / Parte de Falta) com ícone, lado a lado — o escolhido fica destacado com borda e fundo verde, pra dar mais destaque a essa escolha logo no topo do formulário
 -->
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover, interactive-widget=resizes-content">
@@ -229,6 +230,68 @@
     font-size: 13px;
     color: var(--ink-soft);
     margin-bottom: 5px;
+  }
+  .tipo-doc-legenda {
+    font-size: 13px;
+    color: var(--ink-soft);
+    margin: 0 0 5px;
+  }
+  .tipo-doc-grupo {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+  .tipo-doc-radio {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    opacity: 0;
+    pointer-events: none;
+  }
+  .tipo-doc-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    text-align: center;
+    padding: 16px 10px;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    background: var(--paper-dark);
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    transition: border-color 0.15s ease, background 0.15s ease, transform 0.1s ease;
+  }
+  .tipo-doc-card:active { transform: translateY(1px); }
+  .tipo-doc-icone {
+    width: 26px;
+    height: 26px;
+    color: var(--ink-soft);
+    transition: color 0.15s ease;
+  }
+  .tipo-doc-titulo {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--ink);
+  }
+  .tipo-doc-sub {
+    font-family: 'Courier New', monospace;
+    font-size: 10px;
+    letter-spacing: 0.02em;
+    color: var(--ink-soft);
+  }
+  .tipo-doc-radio:checked + .tipo-doc-card {
+    border-color: var(--accent);
+    background: rgba(34, 230, 160, 0.1);
+    box-shadow: 0 0 0 1px var(--accent) inset;
+  }
+  .tipo-doc-radio:checked + .tipo-doc-card .tipo-doc-icone,
+  .tipo-doc-radio:checked + .tipo-doc-card .tipo-doc-titulo {
+    color: var(--accent-soft);
+  }
+  .tipo-doc-radio:focus-visible + .tipo-doc-card {
+    outline: none;
+    box-shadow: 0 0 0 2px var(--accent-soft);
   }
   input[type="text"], input[type="date"], input[type="time"], input[type="number"], input[type="email"], select {
     width: 100%;
@@ -948,7 +1011,7 @@
 </div>
 <div class="wrap">
   <header>
-    <span class="version-tag">v1.79</span>
+    <span class="version-tag">v1.80</span>
     <div class="header-brand">
       <img src="data:image/png;base64,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" alt="" class="header-logo">
       <div>
@@ -1002,19 +1065,38 @@
       <legend>Identificação do documento</legend>
       <div class="stack">
         <div>
-          <label for="tipoDocumentoSelect">Tipo de documento</label>
-          <select id="tipoDocumentoSelect">
-            <option value="relatorio">Relatório</option>
-            <option value="parte">Parte de Falta</option>
-          </select>
+          <p class="tipo-doc-legenda">Tipo de documento</p>
+          <div class="tipo-doc-grupo" role="radiogroup" aria-label="Tipo de documento">
+            <input type="radio" name="tipoDocumento" id="tipoDocRelatorio" value="relatorio" class="tipo-doc-radio">
+            <label for="tipoDocRelatorio" class="tipo-doc-card">
+              <svg class="tipo-doc-icone" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path d="M6 2.5h9l3 3V21a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V3.5a1 1 0 0 1 1-1Z" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/>
+                <path d="M15 2.5V5a1 1 0 0 0 1 1h2.5" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/>
+                <path d="M8 12h8M8 15.5h8M8 8.5h4" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
+              </svg>
+              <span class="tipo-doc-titulo">Relatório</span>
+              <span class="tipo-doc-sub">Relatório de serviço</span>
+            </label>
+            <input type="radio" name="tipoDocumento" id="tipoDocParte" value="parte" class="tipo-doc-radio">
+            <label for="tipoDocParte" class="tipo-doc-card">
+              <svg class="tipo-doc-icone" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path d="M6 2.5h9l3 3V21a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V3.5a1 1 0 0 1 1-1Z" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/>
+                <path d="M15 2.5V5a1 1 0 0 0 1 1h2.5" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/>
+                <path d="M12 9v5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+                <circle cx="12" cy="17" r="1" fill="currentColor"/>
+              </svg>
+              <span class="tipo-doc-titulo">Parte de Falta</span>
+              <span class="tipo-doc-sub">Falta ao serviço</span>
+            </label>
+          </div>
         </div>
 
         <div id="grupoSituacaoRelatorio">
           <label for="situacaoRelatorioSelect">Situação do relatório</label>
           <select id="situacaoRelatorioSelect">
-            <option value="compareceu">Parceiro veio</option>
-            <option value="remanejado">Fui remanejado</option>
-            <option value="reforco">Fui reforçado</option>
+            <option value="compareceu">Sem novidades</option>
+            <option value="remanejado">Falta ao serviço | Remanejado</option>
+            <option value="reforco">Falta ao serviço | Integrado a equipe</option>
           </select>
         </div>
 
@@ -1467,8 +1549,9 @@ function atualizarLayout() {
   // campos do policial que faltou aparecem tanto na Parte de Falta quanto no Relatório de falta (remanejado/reforço)
   const mostrarFalta = !ehRelatorio || !situacaoAtualEhCompareceu;
 
-  // seletor de tipo de documento
-  document.getElementById('tipoDocumentoSelect').value = tipoDocumento;
+  // seletor de tipo de documento (cartões)
+  const radioTipoAtual = document.getElementById(tipoDocumento === 'parte' ? 'tipoDocParte' : 'tipoDocRelatorio');
+  if (radioTipoAtual) radioTipoAtual.checked = true;
 
   // número + botões de cada documento
   document.getElementById('docRelatorio').hidden = !ehRelatorio;
@@ -1622,7 +1705,11 @@ function escolherSituacao(situacao) {
   atualizarLayout();
 }
 
-document.getElementById('tipoDocumentoSelect').addEventListener('change', function() { escolherTipoDocumento(this.value); });
+document.querySelectorAll('input[name="tipoDocumento"]').forEach(function(radio) {
+  radio.addEventListener('change', function() {
+    if (this.checked) escolherTipoDocumento(this.value);
+  });
+});
 document.getElementById('situacaoRelatorioSelect').addEventListener('change', function() { escolherSituacao(this.value); });
 
 // --- Reset completo do site (chamado no carregamento e toda vez que a aba/atalho é reaberto) ---
@@ -2035,7 +2122,7 @@ document.getElementById('enviarEmailBtn').addEventListener('click', async functi
     return;
   }
   if ((relatorioDoc.situacao === 'remanejado' || relatorioDoc.situacao === 'reforco') && (!parteDoc || !parteMarcada)) {
-    statusEl.textContent = 'Esse Relatório ("Fui remanejado"/"Fui reforçado") exige também a Parte de Falta anexada.';
+    statusEl.textContent = 'Esse Relatório ("Falta ao serviço | Remanejado"/"Falta ao serviço | Integrado a equipe") exige também a Parte de Falta anexada.';
     return;
   }
 
@@ -3020,7 +3107,7 @@ resetFormState();
 // (o iPhone mantém o atalho da tela inicial "suspenso" em vez de recarregar sozinho,
 // então esse é o jeito de avisar que uma atualização está disponível sem precisar
 // remover e adicionar o atalho de novo)
-const CURRENT_VERSION = 'v1.79';
+const CURRENT_VERSION = 'v1.80';
 let operacaoEmAndamento = false;
 
 async function checkForUpdate() {
