@@ -98,6 +98,8 @@
   v1.92 — Corrigido: os botões "Gerar PDF", "Assinar" e "Enviar e-mail" ficavam presos num visual diferente (contorno) pra sempre depois de concluídos, parecendo travados; agora o botão só pisca um ✓ por cima da cor normal por um instante e volta sozinho ao normal — o progresso de cada etapa continua marcado nas abas e na barrinha de progresso, sem precisar deixar o botão "preso"
   v1.93 — A caixa "Conferir antes de gerar" (e outras parecidas) agora segue o mesmo padrão bonito do "Conferir antes de enviar": a lista de dados vira linhas com rótulo em cima e valor embaixo, em vez de um bloco só de texto corrido; e o botão de confirmar ganhou mais destaque (sólido, igual ao "Confirmar e enviar"), com o de excluir numa cor de alerta quando a ação não tem volta
   v1.94 — Removida a barrinha de progresso em cima das abas: era redundante, já que as próprias abas (1. Relatório / 2. Assinar / 3. Enviar) já mostram com um ✓ qual etapa está concluída
+  v1.95 — Nova checagem antes de gerar o PDF: se dois policiais do mesmo documento (ex: os dois da equipe, ou quem faltou e o reforço) ficarem com o mesmo RE digitado, o app avisa em vez de gerar — quase sempre é RE colado ou digitado errado
+  v1.96 — Mais uma checagem antes de gerar: se a "Estação para onde fui" (Remanejado) ou a "Estação de onde ele veio" (Integrado a equipe) ficar igual à estação principal do plantão, o app avisa antes de gerar em vez de deixar passar
 -->
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover, interactive-widget=resizes-content">
@@ -1238,7 +1240,7 @@
 </div>
 <div class="wrap">
   <header>
-    <span class="version-tag">v1.94</span>
+    <span class="version-tag">v1.96</span>
     <div class="header-brand">
       <img src="data:image/png;base64,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" alt="" class="header-logo">
       <div>
@@ -3413,6 +3415,55 @@ document.getElementById('form').addEventListener('submit', async function(e) {
     return;
   }
 
+  // Confere se dois policiais do mesmo documento acabaram com o mesmo RE digitado
+  // (RE colado errado, por exemplo) — quase sempre é engano, e é melhor avisar
+  // antes de gerar um Relatório oficial com esse erro do que descobrir depois.
+  const reVistos = new Map();
+  let mensagemREDuplicado = null;
+  let elementoREDuplicado = null;
+  for (const idRE of idsREParaConferir) {
+    const elRE = document.getElementById(idRE);
+    const valor = elRE ? elRE.value.trim() : '';
+    if (!valor) continue;
+    if (reVistos.has(valor)) {
+      const outroId = reVistos.get(valor);
+      mensagemREDuplicado = `${ROTULOS_RE[outroId] || outroId} e ${ROTULOS_RE[idRE] || idRE} estão com o mesmo RE (${valor}) — confira se não foi engano`;
+      elementoREDuplicado = elRE;
+      break;
+    }
+    reVistos.set(valor, idRE);
+  }
+  if (mensagemREDuplicado) {
+    statusEl.textContent = `${mensagemREDuplicado}.`;
+    if (elementoREDuplicado) elementoREDuplicado.focus();
+    return;
+  }
+
+  // Confere se a estação de destino/origem não ficou igual à estação principal do
+  // plantão (ex: "fui remanejado" pra uma estação, mas escolheu sem querer a mesma
+  // de onde já estava) — não faz sentido e é melhor avisar antes de gerar.
+  const estacaoPrincipalValue = document.getElementById('estacao').value;
+  let mensagemEstacaoRepetida = null;
+  let elementoEstacaoRepetida = null;
+  if (!ehParteAgora && situacaoRelatorio === 'remanejado') {
+    const destinoEl = document.getElementById('estacaoDestino');
+    if (destinoEl && destinoEl.value && destinoEl.value === estacaoPrincipalValue) {
+      mensagemEstacaoRepetida = 'A "Estação para onde fui" está igual à estação principal do plantão — confira se selecionou a estação certa';
+      elementoEstacaoRepetida = destinoEl;
+    }
+  } else if (!ehParteAgora && situacaoRelatorio === 'reforco') {
+    const origemEl = document.getElementById('estacaoOrigem');
+    if (origemEl && origemEl.value && origemEl.value === estacaoPrincipalValue) {
+      mensagemEstacaoRepetida = 'A "Estação de onde ele veio" está igual à estação principal do plantão — confira se selecionou a estação certa';
+      elementoEstacaoRepetida = origemEl;
+    }
+  }
+  if (mensagemEstacaoRepetida) {
+    statusEl.textContent = `${mensagemEstacaoRepetida}.`;
+    if (elementoEstacaoRepetida) elementoEstacaoRepetida.focus();
+    return;
+  }
+
   operacaoEmAndamento = true;
   gerarBtn.disabled = true;
   try {
@@ -3548,7 +3599,7 @@ resetFormState();
 // (o iPhone mantém o atalho da tela inicial "suspenso" em vez de recarregar sozinho,
 // então esse é o jeito de avisar que uma atualização está disponível sem precisar
 // remover e adicionar o atalho de novo)
-const CURRENT_VERSION = 'v1.94';
+const CURRENT_VERSION = 'v1.96';
 let operacaoEmAndamento = false;
 
 async function checkForUpdate() {
