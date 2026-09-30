@@ -89,6 +89,8 @@
   v1.83 — O painel desses menus agora abre com uma animação suave (surge crescendo, em vez de aparecer seco); em listas compridas (ex: Estação do metrô, 14 opções), o menu já abre mostrando a opção marcada, sem precisar rolar pra achar o ✓
   v1.84 — Corrigido: se um desses menus ficasse aberto e você trocasse de aba ou gerasse/assinasse/enviasse com sucesso (o que reseta o formulário), o menu "esquecia" que devia estar fechado por dentro — na próxima vez que tocasse nele, às vezes precisava tocar duas vezes pra abrir de verdade
   v1.85 — Corrigido: tocar bem no nome do campo (ex: "Turno", "Estação do metrô") ainda abria o menu antigo do sistema por baixo, em vez do novo menu do app — agora tocar no nome também abre o menu novo, em todos os campos que usam esse menu
+  v1.86 — Cartão "Parte de Falta" (tipo de documento) renomeado pra só "Parte", já que embaixo já diz "Falta ao serviço"; opções de "Situação do relatório" simplificadas pra "Sem novidades" / "Remanejado" / "Integrado a equipe"
+  v1.87 — Barrinha de progresso acima das abas (1. Relatório / 2. Assinar / 3. Enviar) mostrando visualmente quantas etapas já foram concluídas; os botões "Gerar PDF", "Assinar" e "Enviar e-mail" agora mudam de aparência (contorno + ✓) quando aquela etapa já foi feita, pra destacar melhor qual é a próxima ação
 -->
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover, interactive-widget=resizes-content">
@@ -523,6 +525,22 @@
   }
   button:hover { background: var(--accent-soft); }
   button:active { transform: translateY(2px); box-shadow: 0 0 0 rgba(0, 0, 0, 0.18); }
+  /* Ação já concluída nesta sessão (ex: PDF já gerado, escala já assinada, e-mail já
+     enviado): o botão perde o peso visual de "próxima ação a fazer" e vira contorno,
+     pra guiar o olho pro que ainda falta — continua clicável, caso queira refazer. */
+  button.acao-concluida,
+  button.acao-concluida:hover,
+  button.acao-concluida:active {
+    background: transparent !important;
+    color: var(--accent-soft) !important;
+    border: 1.5px solid var(--accent-soft) !important;
+    box-shadow: none !important;
+  }
+  button.acao-concluida::before {
+    content: '✓ ';
+    font-family: Arial, sans-serif;
+    font-weight: 900;
+  }
   .hint {
     font-size: 12px;
     color: var(--ink-soft);
@@ -561,6 +579,19 @@
     text-align: center;
     margin-top: -4px;
   }
+  .tabs-progresso {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 8px;
+  }
+  .tabs-progresso-seg {
+    flex: 1;
+    height: 4px;
+    border-radius: 2px;
+    background: var(--line);
+    transition: background 0.25s ease;
+  }
+  .tabs-progresso-seg.feito { background: var(--accent); }
   .tabs {
     display: grid;
     grid-template-columns: 1fr 1fr 1fr;
@@ -1138,7 +1169,7 @@
 </div>
 <div class="wrap">
   <header>
-    <span class="version-tag">v1.85</span>
+    <span class="version-tag">v1.87</span>
     <div class="header-brand">
       <img src="data:image/png;base64,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" alt="" class="header-logo">
       <div>
@@ -1151,6 +1182,11 @@
 
   <div class="offline-banner" id="offlineBanner" hidden>Sem conexão com a internet — buscar número, enviar e-mail e outras ações que dependem da rede não vão funcionar até o sinal voltar.</div>
 
+  <div class="tabs-progresso" aria-hidden="true">
+    <div class="tabs-progresso-seg" id="progSeg1"></div>
+    <div class="tabs-progresso-seg" id="progSeg2"></div>
+    <div class="tabs-progresso-seg" id="progSeg3"></div>
+  </div>
   <div class="tabs" role="tablist">
     <button type="button" class="tab-btn active" id="tabRelatorioBtn" role="tab" aria-selected="true">1. Relatório</button>
     <button type="button" class="tab-btn" id="tabAssinarBtn" role="tab" aria-selected="false">2. Assinar</button>
@@ -1212,7 +1248,7 @@
                 <path d="M12 9v5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
                 <circle cx="12" cy="17" r="1" fill="currentColor"/>
               </svg>
-              <span class="tipo-doc-titulo">Parte de Falta</span>
+              <span class="tipo-doc-titulo">Parte</span>
               <span class="tipo-doc-sub">Falta ao serviço</span>
             </label>
           </div>
@@ -1222,8 +1258,8 @@
           <label for="situacaoRelatorioSelect">Situação do relatório</label>
           <select id="situacaoRelatorioSelect">
             <option value="compareceu">Sem novidades</option>
-            <option value="remanejado">Falta ao serviço | Remanejado</option>
-            <option value="reforco">Falta ao serviço | Integrado a equipe</option>
+            <option value="remanejado">Remanejado</option>
+            <option value="reforco">Integrado a equipe</option>
           </select>
         </div>
 
@@ -2116,6 +2152,23 @@ function atualizarIndicadorEtapas() {
   if (tabRelatorioBtn) tabRelatorioBtn.classList.toggle('step-done', passo1);
   if (tabAssinarBtn) tabAssinarBtn.classList.toggle('step-done', passo2);
   if (tabEnviarBtn) tabEnviarBtn.classList.toggle('step-done', passo3);
+
+  const progSeg1 = document.getElementById('progSeg1');
+  const progSeg2 = document.getElementById('progSeg2');
+  const progSeg3 = document.getElementById('progSeg3');
+  if (progSeg1) progSeg1.classList.toggle('feito', passo1);
+  if (progSeg2) progSeg2.classList.toggle('feito', passo2);
+  if (progSeg3) progSeg3.classList.toggle('feito', passo3);
+
+  // Botão de ação principal de cada aba: quando aquele passo já foi feito nesta
+  // sessão, ele deixa de ter o mesmo peso visual do botão "próxima ação" pra não
+  // competir com o que ainda falta fazer (continua clicável, dá pra refazer).
+  const gerarPdfBtnEl = document.getElementById('gerarPdfBtn');
+  const assinarBtnPrincipal = document.getElementById('assinarBtn');
+  const enviarEmailBtnEl = document.getElementById('enviarEmailBtn');
+  if (gerarPdfBtnEl) gerarPdfBtnEl.classList.toggle('acao-concluida', passo1);
+  if (assinarBtnPrincipal) assinarBtnPrincipal.classList.toggle('acao-concluida', passo2);
+  if (enviarEmailBtnEl) enviarEmailBtnEl.classList.toggle('acao-concluida', passo3);
 }
 
 function atualizarChecklistAnexos() {
@@ -2389,7 +2442,7 @@ document.getElementById('enviarEmailBtn').addEventListener('click', async functi
     return;
   }
   if ((relatorioDoc.situacao === 'remanejado' || relatorioDoc.situacao === 'reforco') && (!parteDoc || !parteMarcada)) {
-    statusEl.textContent = 'Esse Relatório ("Falta ao serviço | Remanejado"/"Falta ao serviço | Integrado a equipe") exige também a Parte de Falta anexada.';
+    statusEl.textContent = 'Esse Relatório ("Remanejado"/"Integrado a equipe") exige também a Parte de Falta anexada.';
     return;
   }
 
@@ -3374,7 +3427,7 @@ resetFormState();
 // (o iPhone mantém o atalho da tela inicial "suspenso" em vez de recarregar sozinho,
 // então esse é o jeito de avisar que uma atualização está disponível sem precisar
 // remover e adicionar o atalho de novo)
-const CURRENT_VERSION = 'v1.85';
+const CURRENT_VERSION = 'v1.87';
 let operacaoEmAndamento = false;
 
 async function checkForUpdate() {
