@@ -121,6 +121,7 @@
   v2.15 — Entendida a causa de vez: na v2.12 o borrão aparecia ao abrir e sumia ao rolar porque o iOS 26 só deixa de desfocar o topo quando existe um elemento fixo encostado lá em cima — e as abas só grudavam no topo depois de rolar. Agora as abas são normais de novo (rolam com a página) e uma faixa fixa, da cor do fundo, fica na altura do relógio/bateria desde a abertura do app. Topo com folga de 10px (igual ao Calendário) e tela de carregamento respeitando a área do relógio. Correção: a regra do cartão de sucesso da v2.10 era só redundante, o app já escondia ele certo
   v2.16 — O borrão voltou com a faixa da v2.15: ela terminava exatamente na borda do relógio, e as abas grudadas (que resolviam) ficavam logo abaixo dessa borda — então o iOS provavelmente procura o elemento fixo logo abaixo da barra de status. A faixa agora desce 10px além do relógio, só dentro da folga vazia do topo, sem cobrir nada com o app parado
   v2.17 — Escondida a barrinha de rolagem que aparecia no lado direito da tela ao rolar (na página e nos menus de seleção); a rolagem em si continua igual
+  v2.18 — "Pesquisar Escala" agora avisa quando a VPN (AnyConnect) não está conectada, em vez de abrir uma página que não carrega (o app testa se a intranet responde ao abrir a aba "2. Assinar" e ao voltar pro app; se o teste errar, tocar de novo abre mesmo assim). Seletor do PDF da escala sem aquele quadrado branco (era a miniatura do arquivo que o iPhone mostra) — agora é um botão "Escolher arquivo"/"Trocar arquivo" com o nome do arquivo. Textos de ajuda da aba Assinar e do e-mail centralizados, com as linhas equilibradas. Aviso de envio corrigido: o mínimo pra enviar é o Relatório + a escala assinada (antes dizia "ao menos um documento"). Frase do topo reescrita: "Gere o relatório, assine a escala e envie por e-mail em poucos toques." "Número da Parte de Falta" virou "Número da parte"
 -->
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
@@ -594,6 +595,13 @@
     font-size: 12px;
     color: var(--ink-soft);
     margin: 4px 0 0;
+  }
+  /* Texto de ajuda centralizado, com as linhas equilibradas (a de baixo não
+     fica curtinha e torta) */
+  .hint-centro {
+    text-align: center;
+    text-wrap: balance;
+    margin-top: 8px;
   }
   .status {
     text-align: center;
@@ -1079,6 +1087,51 @@
     background: #ff6b5b !important;
     color: var(--white) !important;
   }
+  /* O seletor de arquivo padrão do iPhone mostra uma miniatura do arquivo
+     escolhido (no PDF da escala sai um quadrado branco, sem sentido nenhum).
+     O campo de verdade fica escondido e no lugar dele aparece um botão próprio
+     com o nome do arquivo. */
+  .file-input-oculto {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    opacity: 0;
+    overflow: hidden;
+    pointer-events: none;
+  }
+  .file-picker {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    margin: 0;
+    padding: 9px 10px;
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    background: var(--white);
+    cursor: pointer;
+    min-width: 0;
+  }
+  .file-picker-btn {
+    flex-shrink: 0;
+    padding: 6px 12px;
+    border: 1px solid var(--accent);
+    border-radius: 999px;
+    color: var(--accent);
+    font-family: Georgia, 'Times New Roman', serif;
+    font-size: 13px;
+    font-weight: bold;
+  }
+  .file-picker-nome {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    color: var(--ink-soft);
+    font-family: Georgia, 'Times New Roman', serif;
+    font-size: 14px;
+  }
+  .file-picker-nome.escolhido { color: var(--ink); }
   .file-input {
     width: 100%;
     padding: 9px 10px;
@@ -1302,7 +1355,7 @@
 </div>
 <div class="wrap">
   <header>
-    <span class="version-tag">v2.17</span>
+    <span class="version-tag">v2.18</span>
     <div class="header-brand">
       <img src="data:image/png;base64,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" alt="" class="header-logo">
       <div>
@@ -1310,7 +1363,7 @@
         <h1>Gerador de Relatório</h1>
       </div>
     </div>
-    <p class="sub">Preencha o que muda a cada plantão. Data, telefone, sua assinatura e o restante do texto ficam fixos, exatamente como no modelo original.</p>
+    <p class="sub">Gere o relatório, assine a escala e envie por e-mail em poucos toques.</p>
   </header>
 
   <div class="offline-banner" id="offlineBanner" hidden>Sem conexão com a internet — buscar número, enviar e-mail e outras ações que dependem da rede não vão funcionar até o sinal voltar.</div>
@@ -1417,7 +1470,7 @@
 
         <div id="docParte" class="stack" hidden>
           <div>
-            <label for="numeroParte">Número da Parte de Falta</label>
+            <label for="numeroParte">Número da parte</label>
             <div class="prefix-field">
               <span>CPAM1-</span>
               <input type="text" id="numeroParte" class="mid-input" inputmode="numeric" autocomplete="off" placeholder="1332">
@@ -1597,7 +1650,7 @@
         </div>
         <div>
           <button type="button" id="abrirEscalaIntranetBtn" class="secondary-btn block-btn">Pesquisar Escala</button>
-          <p class="hint">Conecte-se ao AnyConnect. Ao abrir o PDF, toque no ícone de compartilhar e em "Salvar em Arquivos".</p>
+          <p class="hint hint-centro">Conecte-se ao AnyConnect. Ao abrir o PDF, toque no ícone de compartilhar e em "Salvar em Arquivos".</p>
           <p class="status" id="statusEscalaIntranet" role="status" aria-live="polite"></p>
         </div>
       </div>
@@ -1608,7 +1661,8 @@
       <div class="row">
         <div>
           <label for="escalaFile">Arquivo da escala (PDF)</label>
-          <input type="file" id="escalaFile" class="file-input" accept="application/pdf">
+          <input type="file" id="escalaFile" class="file-input-oculto" accept="application/pdf">
+          <label for="escalaFile" class="file-picker"><span class="file-picker-btn" id="escalaFileBtnTexto">Escolher arquivo</span><span class="file-picker-nome" id="escalaFileNome">Nenhum arquivo escolhido</span></label>
         </div>
       </div>
       <div class="check-row disponivel" id="escalaAnexadaInfo" hidden>
@@ -1616,7 +1670,7 @@
         <button type="button" class="ver-pdf-btn" id="verEscalaAnexada">Ver PDF</button>
         <span class="check-status">anexado</span>
       </div>
-      <p class="hint">Anexe o PDF da escala (Relatório de Presença de Escala) recebido. A assinatura e o nome são colocados automaticamente no local certo.</p>
+      <p class="hint hint-centro">Anexe o PDF da escala (Relatório de Presença de Escala) recebido. A assinatura e o nome são colocados automaticamente no local certo.</p>
     </fieldset>
 
     <div class="stack" style="gap: 8px;">
@@ -1684,7 +1738,7 @@
           <textarea id="mensagemEmail" rows="9"></textarea>
         </div>
       </div>
-      <p class="hint">Segue o modelo com as informações preenchidas ou fornecidas automaticamente. Pode editar à vontade antes de enviar.</p>
+      <p class="hint hint-centro">Segue o modelo com as informações preenchidas ou fornecidas automaticamente. Pode editar à vontade antes de enviar.</p>
     </fieldset>
 
     <div class="stack" style="gap: 8px;">
@@ -2047,7 +2101,7 @@ const ROTULOS_RE = {
 // Nomes amigáveis dos campos que o navegador não bloqueia sozinho (não são "required"),
 // usados pra avisar exatamente o que falta preencher antes de gerar o PDF.
 const ROTULOS_CAMPOS = {
-  numeroParte: 'Número da Parte de Falta',
+  numeroParte: 'Número da parte',
   estacaoDestino: 'Estação de destino (fui remanejado)',
   estacaoOrigem: 'Estação de origem do reforço',
   parceiroNome: 'Nome de guerra do parceiro',
@@ -2191,6 +2245,7 @@ function resetFormState() {
   // Assinar Escala
   const escalaFile = document.getElementById('escalaFile');
   if (escalaFile) escalaFile.value = '';
+  if (typeof atualizarSeletorArquivoEscala === 'function') atualizarSeletorArquivoEscala();
   const statusAssinar = document.getElementById('statusAssinar');
   if (statusAssinar) statusAssinar.textContent = '';
   const idEscalaIntranet = document.getElementById('idEscalaIntranet');
@@ -2246,6 +2301,7 @@ function showTab(target) {
     btn.setAttribute('aria-selected', String(ativo));
   });
   if (target === 'enviar' && typeof prepararAbaEnviarEmail === 'function') prepararAbaEnviarEmail();
+  if (target === 'assinar' && typeof testarVpn === 'function') testarVpn();
 }
 tabRelatorioBtn.addEventListener('click', () => showTab('relatorio'));
 tabAssinarBtn.addEventListener('click', () => showTab('assinar'));
@@ -2552,8 +2608,12 @@ document.getElementById('enviarEmailBtn').addEventListener('click', async functi
   const mensagem = document.getElementById('mensagemEmail').value.trim();
   const destinatariosSelecionados = destinatarios.filter(d => d.marcado).map(d => d.email);
 
-  if (!anexosSelecionados.length) {
-    statusEl.textContent = 'Marque ao menos um documento pra anexar.';
+  // Mínimo pra enviar: Relatório + escala assinada (e a Parte, quando o
+  // Relatório for "Remanejado"/"Integrado a equipe" — conferido mais abaixo).
+  const faltaRelatorio = !ultimosDocumentos.relatorio || !document.getElementById('anexarRelatorio').checked;
+  const faltaEscala = !ultimosDocumentos.escala || !document.getElementById('anexarEscala').checked;
+  if (faltaRelatorio && faltaEscala) {
+    statusEl.textContent = 'Pra enviar é preciso no mínimo o Relatório e a escala assinada anexados.';
     return;
   }
   if (!mensagem) {
@@ -2662,6 +2722,31 @@ document.getElementById('abrirAnyConnectBtn').addEventListener('click', function
   window.location.href = 'anyconnect://';
 });
 
+// --- Checagem da VPN (AnyConnect) ---
+// A intranet só existe dentro da VPN: fora dela o endereço nem é encontrado e o
+// teste falha na hora. O teste roda sozinho ao abrir a aba "2. Assinar" e ao
+// voltar pro app (ex.: depois de conectar no AnyConnect), então na hora do
+// toque em "Pesquisar Escala" o resultado já está pronto e a intranet abre sem
+// atraso. Não dá pra ler nada da intranet daqui — só saber se ela respondeu.
+const INTRANET_TESTE_URL = 'https://sistemasadmin.intranet.policiamilitar.sp.gov.br/';
+let vpnConectada = null; // null = ainda não testou / sem resposta conclusiva
+let testeVpnAtual = null;
+function testarVpn() {
+  if (testeVpnAtual) return testeVpnAtual;
+  const ctrl = typeof AbortController === 'function' ? new AbortController() : null;
+  const limite = setTimeout(function() { if (ctrl) ctrl.abort(); }, 6000);
+  testeVpnAtual = fetch(INTRANET_TESTE_URL + '?_vpn=' + Date.now(), {
+    mode: 'no-cors',
+    cache: 'no-store',
+    signal: ctrl ? ctrl.signal : undefined,
+  })
+    .then(function() { vpnConectada = true; })
+    .catch(function() { vpnConectada = false; })
+    .finally(function() { clearTimeout(limite); testeVpnAtual = null; });
+  return testeVpnAtual;
+}
+let avisoVpnMostradoEm = 0;
+
 document.getElementById('abrirEscalaIntranetBtn').addEventListener('click', function() {
   const id = document.getElementById('idEscalaIntranet').value.trim();
   const statusEl = document.getElementById('statusEscalaIntranet');
@@ -2669,6 +2754,17 @@ document.getElementById('abrirEscalaIntranetBtn').addEventListener('click', func
     statusEl.textContent = 'Preencha o ID antes de abrir.';
     return;
   }
+  // Sem VPN: avisa em vez de abrir uma página que não vai carregar. Se a pessoa
+  // tocar de novo em até 15 s, abre mesmo assim (caso o teste tenha errado).
+  if (vpnConectada === false && Date.now() - avisoVpnMostradoEm > 15000) {
+    avisoVpnMostradoEm = Date.now();
+    statusEl.textContent = 'VPN não conectada. Conecte-se ao AnyConnect e tente de novo — se já estiver conectado, toque outra vez pra abrir mesmo assim.';
+    testarVpn().then(function() {
+      if (vpnConectada && avisoVpnMostradoEm) statusEl.textContent = 'VPN conectada. Pode tocar em "Pesquisar Escala".';
+    });
+    return;
+  }
+  avisoVpnMostradoEm = 0;
   statusEl.textContent = '';
   // Abre em nova aba (em vez de navegar na mesma janela) pra não perder o app aberto:
   // assim dá pra baixar o PDF lá e voltar aqui pra anexar, sem precisar recarregar tudo.
@@ -2678,10 +2774,22 @@ document.getElementById('abrirEscalaIntranetBtn').addEventListener('click', func
   aguardandoAnexoEscala = true;
 });
 
+function atualizarSeletorArquivoEscala() {
+  const input = document.getElementById('escalaFile');
+  const nome = document.getElementById('escalaFileNome');
+  const btnTexto = document.getElementById('escalaFileBtnTexto');
+  if (!input || !nome || !btnTexto) return;
+  const file = input.files && input.files[0];
+  nome.textContent = file ? file.name : 'Nenhum arquivo escolhido';
+  nome.classList.toggle('escolhido', !!file);
+  btnTexto.textContent = file ? 'Trocar arquivo' : 'Escolher arquivo';
+}
+
 document.getElementById('escalaFile').addEventListener('change', function() {
   const infoEl = document.getElementById('escalaAnexadaInfo');
   const nomeEl = document.getElementById('escalaAnexadaNome');
   const file = this.files[0];
+  atualizarSeletorArquivoEscala();
   if (file) {
     nomeEl.textContent = file.name;
     infoEl.hidden = false;
@@ -3197,7 +3305,7 @@ document.getElementById('excluirParteBtn').addEventListener('click', async funct
   const numeroParteValue = document.getElementById('numeroParte').value.trim();
 
   if (!numeroParteValue) {
-    statusParte.textContent = 'Não há número no campo "Número da Parte de Falta" para excluir.';
+    statusParte.textContent = 'Não há número no campo "Número da parte" para excluir.';
     return;
   }
 
@@ -3663,7 +3771,7 @@ resetFormState();
 // (o iPhone mantém o atalho da tela inicial "suspenso" em vez de recarregar sozinho,
 // então esse é o jeito de avisar que uma atualização está disponível sem precisar
 // remover e adicionar o atalho de novo)
-const CURRENT_VERSION = 'v2.17';
+const CURRENT_VERSION = 'v2.18';
 let operacaoEmAndamento = false;
 
 async function checkForUpdate() {
@@ -3746,6 +3854,17 @@ document.addEventListener('visibilitychange', function() {
   } else if (document.visibilityState === 'visible') {
     maybeReset();
     checkForUpdate();
+    // Voltou pro app (ex.: depois de conectar no AnyConnect): refaz o teste da VPN
+    const painelAssinar = document.getElementById('panel-assinar');
+    if (painelAssinar && !painelAssinar.hidden && typeof testarVpn === 'function') {
+      testarVpn().then(function() {
+        const st = document.getElementById('statusEscalaIntranet');
+        if (st && vpnConectada && avisoVpnMostradoEm) {
+          st.textContent = 'VPN conectada. Pode tocar em "Pesquisar Escala".';
+          avisoVpnMostradoEm = 0;
+        }
+      });
+    }
     if (aguardandoAnexoEscala) {
       const fileAtual = document.getElementById('escalaFile');
       if (fileAtual && !fileAtual.files.length) {
