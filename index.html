@@ -91,6 +91,8 @@
   v1.85 — Corrigido: tocar bem no nome do campo (ex: "Turno", "Estação do metrô") ainda abria o menu antigo do sistema por baixo, em vez do novo menu do app — agora tocar no nome também abre o menu novo, em todos os campos que usam esse menu
   v1.86 — Cartão "Parte de Falta" (tipo de documento) renomeado pra só "Parte", já que embaixo já diz "Falta ao serviço"; opções de "Situação do relatório" simplificadas pra "Sem novidades" / "Remanejado" / "Integrado a equipe"
   v1.87 — Barrinha de progresso acima das abas (1. Relatório / 2. Assinar / 3. Enviar) mostrando visualmente quantas etapas já foram concluídas; os botões "Gerar PDF", "Assinar" e "Enviar e-mail" agora mudam de aparência (contorno + ✓) quando aquela etapa já foi feita, pra destacar melhor qual é a próxima ação
+  v1.88 — Corrigido: em "Assinar", depois de anexar o PDF da escala, a caixinha "✓ anexado" aparecia colada bem em cima do campo de arquivo, sem espaço nenhum entre os dois
+  v1.89 — Caixa de confirmação (a que pergunta antes de assinar, excluir ou gerar PDF) redesenhada: pergunta principal em destaque e centralizada, nota complementar separada visualmente, e listas de dados (como o resumo antes de gerar) viram um bloco próprio alinhado à esquerda em vez de ficar tudo misturado — texto não quebra mais de forma esquisita, e os dois botões ficam do mesmo tamanho, lado a lado
 -->
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover, interactive-widget=resizes-content">
@@ -816,6 +818,10 @@
     overflow: hidden;
     transition: border-color 0.25s ease, background 0.25s ease;
   }
+  /* Quando o "check-row" de confirmação vem logo depois do campo de arquivo (fora
+     de um .stack, que já dá espaçamento entre os itens), afasta os dois pra não
+     ficarem colados um no outro. */
+  #escalaAnexadaInfo { margin-top: 14px; }
   .check-row::before {
     content: '';
     position: absolute;
@@ -940,24 +946,50 @@
   .confirm-box {
     background: var(--paper);
     border: 1px solid var(--line);
-    border-radius: 10px;
-    padding: 22px;
-    max-width: 360px;
+    border-radius: 14px;
+    padding: 26px 24px;
+    max-width: 400px;
     width: 100%;
     box-shadow: 0 12px 32px rgba(0, 0, 0, 0.3);
   }
-  .confirm-message {
-    font-size: 15px;
+  .confirm-titulo {
+    font-size: 16px;
+    font-weight: 700;
     color: var(--ink);
-    line-height: 1.6;
-    margin: 0 0 18px;
+    line-height: 1.55;
+    text-align: center;
+    margin: 0 0 8px;
+    overflow-wrap: break-word;
+  }
+  .confirm-detalhe {
+    font-size: 13.5px;
+    color: var(--ink-soft);
+    line-height: 1.55;
+    text-align: center;
+    margin: 0 0 4px;
     white-space: pre-line;
+    overflow-wrap: break-word;
+  }
+  /* Quando o detalhe é uma lista de dados (ex: resumo do documento antes de gerar,
+     com várias linhas "Rótulo: valor"), fica melhor como um bloco à esquerda, tipo
+     recibo, em vez de centralizado — centralizar uma lista de linhas fica esquisito. */
+  .confirm-detalhe.confirm-detalhe-lista {
+    text-align: left;
+    background: var(--paper-dark);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 12px 14px;
+    font-family: 'Courier New', monospace;
+    font-size: 12.5px;
+    margin-top: 2px;
   }
   .confirm-actions {
     display: flex;
-    justify-content: flex-end;
+    justify-content: center;
     gap: 10px;
+    margin-top: 18px;
   }
+  .confirm-actions .secondary-btn { flex: 1; min-width: 0; }
   .file-input {
     width: 100%;
     padding: 9px 10px;
@@ -1169,7 +1201,7 @@
 </div>
 <div class="wrap">
   <header>
-    <span class="version-tag">v1.87</span>
+    <span class="version-tag">v1.89</span>
     <div class="header-brand">
       <img src="data:image/png;base64,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" alt="" class="header-logo">
       <div>
@@ -1582,8 +1614,9 @@
 </div>
 
 <div id="confirmOverlay" class="confirm-overlay" hidden>
-  <div class="confirm-box" role="alertdialog" aria-modal="true" aria-labelledby="confirmMessage">
-    <p id="confirmMessage" class="confirm-message"></p>
+  <div class="confirm-box" role="alertdialog" aria-modal="true" aria-labelledby="confirmTitulo">
+    <p id="confirmTitulo" class="confirm-titulo"></p>
+    <div id="confirmDetalhe" class="confirm-detalhe" hidden></div>
     <div class="confirm-actions">
       <button type="button" id="confirmCancelBtn" class="secondary-btn">Cancelar</button>
       <button type="button" id="confirmOkBtn" class="secondary-btn danger-btn">Excluir</button>
@@ -2820,11 +2853,27 @@ function confirmarCustom(mensagem, opcoes) {
 
   return new Promise((resolve) => {
     const overlay = document.getElementById('confirmOverlay');
-    const msgEl = document.getElementById('confirmMessage');
+    const tituloEl = document.getElementById('confirmTitulo');
+    const detalheEl = document.getElementById('confirmDetalhe');
     const okBtn = document.getElementById('confirmOkBtn');
     const cancelBtn = document.getElementById('confirmCancelBtn');
 
-    msgEl.textContent = mensagem;
+    // Mensagens com "\n\n" separam a pergunta principal (título, em destaque) de um
+    // complemento (nota curta, ou uma lista de dados tipo "Rótulo: valor" pra
+    // conferir antes de confirmar) — cada parte ganha um estilo mais legível.
+    const partes = mensagem.split('\n\n');
+    const principal = partes[0];
+    const detalhe = partes.slice(1).join('\n\n');
+    tituloEl.textContent = principal;
+    if (detalhe) {
+      detalheEl.textContent = detalhe;
+      detalheEl.hidden = false;
+      detalheEl.classList.toggle('confirm-detalhe-lista', detalhe.includes('\n'));
+    } else {
+      detalheEl.hidden = true;
+      detalheEl.textContent = '';
+      detalheEl.classList.remove('confirm-detalhe-lista');
+    }
     okBtn.textContent = okLabel;
     okBtn.classList.toggle('danger-btn', danger);
     overlay.hidden = false;
@@ -3427,7 +3476,7 @@ resetFormState();
 // (o iPhone mantém o atalho da tela inicial "suspenso" em vez de recarregar sozinho,
 // então esse é o jeito de avisar que uma atualização está disponível sem precisar
 // remover e adicionar o atalho de novo)
-const CURRENT_VERSION = 'v1.87';
+const CURRENT_VERSION = 'v1.89';
 let operacaoEmAndamento = false;
 
 async function checkForUpdate() {
