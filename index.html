@@ -122,6 +122,8 @@
   v2.16 — O borrão voltou com a faixa da v2.15: ela terminava exatamente na borda do relógio, e as abas grudadas (que resolviam) ficavam logo abaixo dessa borda — então o iOS provavelmente procura o elemento fixo logo abaixo da barra de status. A faixa agora desce 10px além do relógio, só dentro da folga vazia do topo, sem cobrir nada com o app parado
   v2.17 — Escondida a barrinha de rolagem que aparecia no lado direito da tela ao rolar (na página e nos menus de seleção); a rolagem em si continua igual
   v2.18 — "Pesquisar Escala" agora avisa quando a VPN (AnyConnect) não está conectada, em vez de abrir uma página que não carrega (o app testa se a intranet responde ao abrir a aba "2. Assinar" e ao voltar pro app; se o teste errar, tocar de novo abre mesmo assim). Seletor do PDF da escala sem aquele quadrado branco (era a miniatura do arquivo que o iPhone mostra) — agora é um botão "Escolher arquivo"/"Trocar arquivo" com o nome do arquivo. Textos de ajuda da aba Assinar e do e-mail centralizados, com as linhas equilibradas. Aviso de envio corrigido: o mínimo pra enviar é o Relatório + a escala assinada (antes dizia "ao menos um documento"). Frase do topo reescrita: "Gere o relatório, assine a escala e envie por e-mail em poucos toques." "Número da Parte de Falta" virou "Número da parte"
+  v2.19 — Aviso de VPN mais limpo: só "VPN não conectada" (ou "VPN conectada", em verde, quando ela liga), centralizado, com o selo "VPN" igual ao da barra de status do iPhone e afastado do texto de ajuda. Ao trocar de aba, os avisos da aba anterior (erros, "VPN não conectada", confirmações) somem em vez de ficarem parados na tela
+  v2.20 — Lápis ao lado de cada e-mail salvo nos destinatários: toca nele, corrige o e-mail ali mesmo e toca em "Salvar" (ou Enter). A marcação de quem recebe continua a mesma; e-mail inválido ou repetido é avisado
 -->
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
@@ -595,6 +597,29 @@
     font-size: 12px;
     color: var(--ink-soft);
     margin: 4px 0 0;
+  }
+  /* Aviso de VPN embaixo do "Pesquisar Escala": afastado do texto de ajuda,
+     com o selo "VPN" no mesmo estilo do que o iPhone mostra na barra de status
+     quando a VPN está ligada. */
+  #statusEscalaIntranet:not(:empty) { margin-top: 14px; }
+  .vpn-aviso {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    color: #ff9188;
+    font-weight: bold;
+  }
+  .vpn-aviso.ok { color: var(--accent); }
+  .vpn-badge {
+    display: inline-block;
+    padding: 1px 4px 0;
+    border: 1.5px solid currentColor;
+    border-radius: 4px;
+    font-family: -apple-system, 'SF Pro Text', Arial, sans-serif;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.3px;
+    line-height: 1.3;
   }
   /* Texto de ajuda centralizado, com as linhas equilibradas (a de baixo não
      fica curtinha e torta) */
@@ -1226,6 +1251,46 @@
     flex-shrink: 0;
   }
   .check-row .destinatario-remover:active { color: #ff6b5b; }
+  /* Lápis pra corrigir um e-mail salvo ali mesmo, sem remover e adicionar de novo */
+  .check-row .destinatario-editar {
+    appearance: none;
+    border: none;
+    background: none;
+    box-shadow: none;
+    color: var(--ink-soft);
+    padding: 2px;
+    width: auto;
+    min-height: 0;
+    display: inline-flex;
+    align-items: center;
+    cursor: pointer;
+  }
+  /* E-mail comprido quebra dentro do próprio texto, e o lápis/× ficam sempre
+     na mesma linha, no canto direito */
+  .check-row.destinatario-row { flex-wrap: nowrap; }
+  .check-row.destinatario-row .check-label { min-width: 0; overflow-wrap: anywhere; }
+  .check-row .destinatario-editar svg { width: 17px; height: 17px; display: block; }
+  .check-row .destinatario-editar:active { color: var(--accent); }
+  .check-row .destinatario-edicao {
+    flex: 1;
+    min-width: 0;
+    width: auto;
+    padding: 6px 8px;
+    font-size: 16px;
+  }
+  .check-row .destinatario-salvar {
+    appearance: none;
+    border: none;
+    background: none;
+    box-shadow: none;
+    color: var(--accent);
+    font-size: 13px;
+    font-weight: bold;
+    padding: 2px 4px;
+    width: auto;
+    min-height: 0;
+    cursor: pointer;
+  }
   .destinatario-add {
     display: flex;
     flex-direction: column;
@@ -1355,7 +1420,7 @@
 </div>
 <div class="wrap">
   <header>
-    <span class="version-tag">v2.18</span>
+    <span class="version-tag">v2.20</span>
     <div class="header-brand">
       <img src="data:image/png;base64,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" alt="" class="header-logo">
       <div>
@@ -2292,6 +2357,13 @@ const panelEnviar = document.getElementById('panel-enviar');
 
 function showTab(target) {
   document.dispatchEvent(new Event('fecharTodosSelectsCustom'));
+  // Trocou de aba: some qualquer aviso de ação anterior ("VPN não conectada",
+  // erros, "gerado com sucesso"...), pra não ficar mensagem velha na tela.
+  const abaAtual = !panelRelatorio.hidden ? 'relatorio' : (!panelAssinar.hidden ? 'assinar' : 'enviar');
+  if (abaAtual !== target) {
+    document.querySelectorAll('.status').forEach(function(el) { el.textContent = ''; });
+    if (typeof avisoVpnMostradoEm !== 'undefined') avisoVpnMostradoEm = 0;
+  }
   panelRelatorio.hidden = target !== 'relatorio';
   panelAssinar.hidden = target !== 'assinar';
   panelEnviar.hidden = target !== 'enviar';
@@ -2745,7 +2817,18 @@ function testarVpn() {
     .finally(function() { clearTimeout(limite); testeVpnAtual = null; });
   return testeVpnAtual;
 }
-let avisoVpnMostradoEm = 0;
+var avisoVpnMostradoEm = 0;
+function mostrarStatusVpn(statusEl, conectada) {
+  statusEl.textContent = '';
+  const aviso = document.createElement('span');
+  aviso.className = 'vpn-aviso' + (conectada ? ' ok' : '');
+  const selo = document.createElement('span');
+  selo.className = 'vpn-badge';
+  selo.textContent = 'VPN';
+  aviso.appendChild(selo);
+  aviso.appendChild(document.createTextNode(conectada ? 'conectada' : 'não conectada'));
+  statusEl.appendChild(aviso);
+}
 
 document.getElementById('abrirEscalaIntranetBtn').addEventListener('click', function() {
   const id = document.getElementById('idEscalaIntranet').value.trim();
@@ -2758,9 +2841,11 @@ document.getElementById('abrirEscalaIntranetBtn').addEventListener('click', func
   // tocar de novo em até 15 s, abre mesmo assim (caso o teste tenha errado).
   if (vpnConectada === false && Date.now() - avisoVpnMostradoEm > 15000) {
     avisoVpnMostradoEm = Date.now();
-    statusEl.textContent = 'VPN não conectada. Conecte-se ao AnyConnect e tente de novo — se já estiver conectado, toque outra vez pra abrir mesmo assim.';
+    // (se o teste tiver errado e a VPN estiver ligada, tocar de novo em até
+    // 15 s abre mesmo assim)
+    mostrarStatusVpn(statusEl, false);
     testarVpn().then(function() {
-      if (vpnConectada && avisoVpnMostradoEm) statusEl.textContent = 'VPN conectada. Pode tocar em "Pesquisar Escala".';
+      if (vpnConectada && avisoVpnMostradoEm) mostrarStatusVpn(statusEl, true);
     });
     return;
   }
@@ -2889,13 +2974,17 @@ function renderizarDestinatarios() {
   container.innerHTML = '';
   destinatarios.forEach((d, indice) => {
     const linha = document.createElement('div');
-    linha.className = 'check-row' + (d.marcado ? ' disponivel' : '');
+    linha.className = 'check-row destinatario-row' + (d.marcado ? ' disponivel' : '');
     linha.innerHTML = `
       <input type="checkbox" id="destinatarioCheck${indice}">
       <label for="destinatarioCheck${indice}" class="check-label"></label>
+      <button type="button" class="destinatario-editar" aria-label="Editar e-mail"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"/></svg></button>
       <button type="button" class="destinatario-remover" aria-label="Remover">&times;</button>
     `;
     linha.querySelector('.check-label').textContent = d.email;
+    linha.querySelector('.destinatario-editar').addEventListener('click', function() {
+      editarDestinatario(linha, indice);
+    });
     const checkEl = linha.querySelector('input[type="checkbox"]');
     checkEl.checked = d.marcado;
     checkEl.addEventListener('change', function() {
@@ -2916,6 +3005,76 @@ function renderizarDestinatarios() {
   });
   atualizarContagemEnvio();
   atualizarBotaoMarcarTodos();
+}
+
+// Troca o e-mail da linha por um campo de texto; "Salvar" (ou Enter) grava,
+// Esc ou tocar fora sem mudar nada só volta ao normal. A marcação de quem
+// recebe o envio continua a mesma.
+function editarDestinatario(linha, indice) {
+  const statusEl = document.getElementById('statusDestinatarios');
+  const labelEl = linha.querySelector('.check-label');
+  const editarBtn = linha.querySelector('.destinatario-editar');
+  if (!labelEl || linha.querySelector('.destinatario-edicao')) return;
+  const campo = document.createElement('input');
+  campo.type = 'email';
+  campo.inputMode = 'email';
+  campo.autocomplete = 'off';
+  campo.className = 'destinatario-edicao';
+  campo.value = destinatarios[indice].email;
+  const salvarBtn = document.createElement('button');
+  salvarBtn.type = 'button';
+  salvarBtn.className = 'destinatario-salvar';
+  salvarBtn.textContent = 'Salvar';
+  labelEl.hidden = true;
+  editarBtn.hidden = true;
+  linha.insertBefore(campo, labelEl);
+  linha.insertBefore(salvarBtn, editarBtn);
+  campo.focus();
+  campo.select();
+
+  let terminou = false;
+  function salvar() {
+    if (terminou) return;
+    const novo = campo.value.trim();
+    if (!novo || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(novo)) {
+      statusEl.textContent = 'Digite um e-mail válido.';
+      campo.focus();
+      return;
+    }
+    const repetido = destinatarios.some((outro, i) => i !== indice && outro.email.toLowerCase() === novo.toLowerCase());
+    if (repetido) {
+      statusEl.textContent = 'Esse e-mail já está na lista.';
+      campo.focus();
+      return;
+    }
+    terminou = true;
+    destinatarios[indice].email = novo;
+    statusEl.textContent = '';
+    salvarDestinatarios();
+    renderizarDestinatarios();
+  }
+  function cancelar() {
+    if (terminou) return;
+    terminou = true;
+    statusEl.textContent = '';
+    renderizarDestinatarios();
+  }
+  // pointerdown no Salvar acontece antes do blur do campo, assim tocar em
+  // "Salvar" não é confundido com "tocou fora"
+  salvarBtn.addEventListener('pointerdown', function(e) { e.preventDefault(); });
+  salvarBtn.addEventListener('click', salvar);
+  campo.addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') { e.preventDefault(); salvar(); }
+    else if (e.key === 'Escape') { e.preventDefault(); cancelar(); }
+  });
+  campo.addEventListener('blur', function() {
+    // Tocou fora: se não mudou nada, só fecha; se mudou, tenta salvar
+    setTimeout(function() {
+      if (terminou) return;
+      if (campo.value.trim() === destinatarios[indice].email) cancelar();
+      else salvar();
+    }, 150);
+  });
 }
 
 document.getElementById('marcarTodosDestinatariosBtn').addEventListener('click', function() {
@@ -3771,7 +3930,7 @@ resetFormState();
 // (o iPhone mantém o atalho da tela inicial "suspenso" em vez de recarregar sozinho,
 // então esse é o jeito de avisar que uma atualização está disponível sem precisar
 // remover e adicionar o atalho de novo)
-const CURRENT_VERSION = 'v2.18';
+const CURRENT_VERSION = 'v2.20';
 let operacaoEmAndamento = false;
 
 async function checkForUpdate() {
@@ -3860,7 +4019,7 @@ document.addEventListener('visibilitychange', function() {
       testarVpn().then(function() {
         const st = document.getElementById('statusEscalaIntranet');
         if (st && vpnConectada && avisoVpnMostradoEm) {
-          st.textContent = 'VPN conectada. Pode tocar em "Pesquisar Escala".';
+          mostrarStatusVpn(st, true);
           avisoVpnMostradoEm = 0;
         }
       });
