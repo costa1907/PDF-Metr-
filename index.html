@@ -126,6 +126,7 @@
   v2.20 — Lápis ao lado de cada e-mail salvo nos destinatários: toca nele, corrige o e-mail ali mesmo e toca em "Salvar" (ou Enter). A marcação de quem recebe continua a mesma; e-mail inválido ou repetido é avisado
   v2.21 — Removido o lápis de editar e-mail (a pedido; o × e o "Adicionar" continuam). "Pesquisar Escala" agora sempre confere a VPN na hora do toque quando ainda não tem certeza (mostra "Verificando VPN…" por um instante) — antes, se o teste não tivesse terminado, abria direto sem avisar; o teste também se repete a cada 8 s com a aba Assinar aberta. O espaço do aviso de VPN fica sempre reservado, então o cartão não cresce/encolhe. Campos obrigatórios faltando (ao gerar, buscar número, numerador da parte, pesquisar escala e assinar) ficam com borda vermelha, igual ao menu de estação, e a tela rola até o primeiro; a borda some assim que o campo é preenchido
   v2.22 — Ao trocar de aba, as bordas vermelhas de campos faltando também somem (junto com os avisos)
+  v2.30 — Textos da aba Escala reescritos e centralizados: a dica fica "Anexe o PDF (Relatório de Presença de Escala). / A assinatura e os dados do relatório são preenchidos automaticamente."; a mensagem depois de ler a escala vira linhas curtas e centralizadas ("✓ Escala lida", "Serviço: ID · estação · data · horário", "Parceiro:" ou "Quem faltou:", e avisos com ⚠ quando algo precisa de atenção)
   v2.29 — Duas mudanças na escala: (1) a coluna "Ausente" deixou de ser usada (não serve pra nada): quem faltou e o parceiro são sempre "o outro policial da escala" (o que não é você); se houver mais de um outro policial, o app avisa e você preenche à mão. (2) Nova conferência antes de gerar o PDF, quando há escala anexada e lida: se o seu RE não estiver na escala, se o RE de quem faltou (ou do parceiro) não constar nela, ou se o ID, a data, a estação ou o horário do relatório forem diferentes dos da escala, o app mostra o que não bate e pergunta se quer gerar mesmo assim (pega escala de outro dia/serviço anexada por engano). Sem escala anexada, nada muda
   v2.28 — A escala agora também preenche o serviço: ao anexar o PDF, o app lê o ID, a estação, a data e o horário (Data Início/Término) e preenche esses campos na aba Relatório, além do parceiro/de quem faltou. Estação ou horário que não batem com as opções do app ficam pra você escolher (com aviso). Se o serviço da escala for diferente do que já estava preenchido, os números do relatório/parte são limpos (eram do serviço anterior) e o app avisa pra buscar de novo. Anexar a escala do próximo serviço também troca o parceiro/faltoso que o próprio app tinha preenchido antes
   v2.27 — Aba da escala agora é a primeira: abas viram "1. Escala", "2. Relatório", "3. Enviar", e o app abre na Escala (a escala é a fonte dos dados do parceiro/de quem faltou). Lista do nome de guerra agora mostra só os nomes soltos (ex: Natan, Dionizio, Silva, Masuko); depois de escolher um, ao tocar no campo de novo aparecem os nomes que faltam pra somar um segundo (nome composto), ou é só digitar. Mensagens e subtítulo ajustados à nova ordem
@@ -640,6 +641,12 @@
   }
   /* Texto de ajuda centralizado, com as linhas equilibradas (a de baixo não
      fica curtinha e torta) */
+  #statusLeituraEscala {
+    text-align: center;
+    white-space: pre-line;
+    line-height: 1.5;
+    margin-top: 10px;
+  }
   .hint-centro {
     text-align: center;
     text-wrap: balance;
@@ -1432,7 +1439,7 @@
 </div>
 <div class="wrap">
   <header>
-    <span class="version-tag">v2.29</span>
+    <span class="version-tag">v2.30</span>
     <div class="header-brand">
       <img src="data:image/png;base64,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" alt="" class="header-logo">
       <div>
@@ -1748,7 +1755,7 @@
         <span class="check-status">anexado</span>
       </div>
       <p class="status" id="statusLeituraEscala" role="status" aria-live="polite"></p>
-      <p class="hint hint-centro">Anexe o PDF da escala (Relatório de Presença de Escala) recebido. A assinatura e o nome são colocados automaticamente no local certo, e os dados de quem faltou são lidos do PDF.</p>
+      <p class="hint hint-centro">Anexe o PDF (Relatório de Presença de Escala).<br>A assinatura e os dados do relatório são preenchidos automaticamente.</p>
     </fieldset>
 
     <div class="stack" style="gap: 8px;">
@@ -3091,7 +3098,7 @@ function lerCabecalhoDaEscala(paginas) {
 // Preenche ID, estação, data e horário. Devolve um texto curto do que foi feito.
 function aplicarServicoDaEscala() {
   const sv = escalaServicoLido;
-  if (!sv) return '';
+  if (!sv) return { linha: '', avisos: [] };
   const idEl = document.getElementById('idServico');
   const estEl = document.getElementById('estacao');
   const dataEl = document.getElementById('data');
@@ -3117,7 +3124,7 @@ function aplicarServicoDaEscala() {
     const obj = STATIONS.find(function(st) { return st.name === sv.estacao; });
     feitos.push(obj ? obj.title : sv.estacao);
   } else if (sv.local) {
-    avisos.push('a estação "' + sv.local + '" não é uma das opções do app: escolha na mão');
+    avisos.push('Estação "' + sv.local + '" fora das opções: escolha na mão.');
   }
   if (sv.data) {
     dataEl.value = sv.data;
@@ -3131,14 +3138,12 @@ function aplicarServicoDaEscala() {
       turnoEl.value = sv.turno;
       feitos.push(sv.turno.replace('-', ' às '));
     } else {
-      avisos.push('o horário ' + sv.turno.replace('-', ' às ') + ' não é um dos turnos do app: escolha na mão');
+      avisos.push('Horário ' + sv.turno.replace('-', ' às ') + ' fora dos turnos: escolha na mão.');
     }
   }
 
-  let texto = feitos.length ? 'Serviço preenchido na aba Relatório: ' + feitos.join(', ') + '.' : '';
-  if (limpouNumeros) texto += ' O número do relatório/parte foi limpo porque o serviço mudou: busque de novo.';
-  if (avisos.length) texto += ' Atenção: ' + avisos.join('; ') + '.';
-  return texto.trim();
+  if (limpouNumeros) avisos.unshift('O número do relatório/parte foi limpo (serviço novo): busque de novo.');
+  return { linha: feitos.length ? 'Serviço: ' + feitos.join(' · ') : '', avisos: avisos };
 }
 
 function dadosDoPolicialDaEscala(l) {
@@ -3217,24 +3222,28 @@ async function lerEscalaAnexada(file) {
     if (document.getElementById('escalaFile').files[0] !== file) return;
     const temTexto = paginas.some(function(p) { return p.length > 0; });
     if (!temTexto) {
-      statusEl.textContent = 'Não consegui ler o texto deste PDF (parece imagem). Preencha à mão.';
+      statusEl.textContent = '⚠ Não consegui ler o texto deste PDF (parece imagem).\nPreencha à mão.';
       return;
     }
 
     // 1) o serviço: ID, estação, data e horário
     escalaServicoLido = lerCabecalhoDaEscala(paginas);
-    const textoServico = aplicarServicoDaEscala();
+    const servico = aplicarServicoDaEscala();
 
     // 2) os policiais
     const linhas = lerTabelaDaEscala(paginas);
     if (!escalaServicoLido && (!linhas || !linhas.length)) {
-      statusEl.textContent = 'Não reconheci este PDF como uma escala. Preencha à mão.';
+      statusEl.textContent = '⚠ Não reconheci este PDF como uma escala.\nPreencha à mão.';
       return;
     }
     escalaLinhasLidas = linhas && linhas.length ? linhas : null;
-    let textoPoliciais;
+
+    const msg = ['✓ Escala lida'];
+    if (servico.linha) msg.push(servico.linha);
+    servico.avisos.forEach(function(a) { msg.push('⚠ ' + a); });
+
     if (!linhas || !linhas.length) {
-      textoPoliciais = 'Não reconheci a tabela de policiais: preencha o parceiro/quem faltou à mão.';
+      msg.push('⚠ Não reconheci a tabela de policiais: preencha à mão.');
     } else {
       const rf = escolherFaltosoDaEscala(linhas);
       const rp = escolherParceiroDaEscala(linhas);
@@ -3243,33 +3252,30 @@ async function lerEscalaAnexada(file) {
 
       const modoFalta = emModoFalta();
       const r = modoFalta ? rf : rp;
+      const quemTexto = modoFalta ? 'quem faltou' : 'o parceiro';
       if (!r.ok) {
-        if (r.motivo === 'varios') {
-          textoPoliciais = modoFalta
-            ? `A escala tem ${r.quantos} outros policiais e não dá pra saber quem faltou: preencha à mão.`
-            : `A escala tem ${r.quantos} outros policiais e não dá pra saber qual é o parceiro: preencha à mão.`;
-        } else {
-          textoPoliciais = 'Não achei na escala outro policial além de você: preencha à mão.';
-        }
+        msg.push(r.motivo === 'varios'
+          ? `⚠ A escala tem ${r.quantos} outros policiais: preencha ${quemTexto} à mão.`
+          : '⚠ Não achei outro policial além de você: preencha à mão.');
       } else {
         const d = modoFalta ? rf.faltoso : rp.parceiro;
-        const quem = `${d.gradTexto ? d.gradTexto + ' ' : ''}${d.nome} (RE ${d.re})`;
-        const avisoGrad = d.grad ? '' : ` A graduação "${d.gradTexto}" não é uma das opções do app: escolha na mão.`;
         const res = modoFalta ? aplicarFaltosoDaEscala() : aplicarParceiroDaEscala();
         if (res === 'ok') {
-          textoPoliciais = modoFalta
-            ? `Quem faltou: ${quem}. Confira.${avisoGrad}`
-            : `Parceiro: ${quem}. Toque em Nome de guerra e escolha o nome (se for composto, toque de novo e some o segundo).${avisoGrad}`;
+          msg.push(`${modoFalta ? 'Quem faltou' : 'Parceiro'}: ${d.grad || d.gradTexto} ${d.nome} · RE ${d.re}`);
+          if (!d.grad) msg.push(`⚠ Graduação "${d.gradTexto}" fora das opções: escolha na mão.`);
+          msg.push(modoFalta
+            ? 'Confira os dados na aba Relatório.'
+            : 'Toque em "Nome de guerra" e escolha o nome (composto: toque de novo).');
         } else {
-          textoPoliciais = `Escala lida (${quem}), mas já há outro RE digitado em "${modoFalta ? 'quem faltou' : 'parceiro'}": não alterei esses campos.`;
+          msg.push(`⚠ Já há outro RE digitado em "${modoFalta ? 'quem faltou' : 'parceiro'}": não alterei esses campos.`);
         }
       }
     }
-    statusEl.textContent = ['Escala lida.', textoServico, textoPoliciais].filter(Boolean).join(' ');
+    statusEl.textContent = msg.join('\n');
   } catch (err) {
     console.error(err);
     if (document.getElementById('escalaFile').files[0] === file) {
-      statusEl.textContent = 'Não foi possível ler a escala agora (sem internet?). Preencha à mão.';
+      statusEl.textContent = '⚠ Não foi possível ler a escala agora (sem internet?).\nPreencha à mão.';
     }
   }
 }
@@ -4467,7 +4473,7 @@ resetFormState();
 // (o iPhone mantém o atalho da tela inicial "suspenso" em vez de recarregar sozinho,
 // então esse é o jeito de avisar que uma atualização está disponível sem precisar
 // remover e adicionar o atalho de novo)
-const CURRENT_VERSION = 'v2.29';
+const CURRENT_VERSION = 'v2.30';
 let operacaoEmAndamento = false;
 
 async function checkForUpdate() {
