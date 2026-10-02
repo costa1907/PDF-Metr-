@@ -126,6 +126,11 @@
   v2.20 — Lápis ao lado de cada e-mail salvo nos destinatários: toca nele, corrige o e-mail ali mesmo e toca em "Salvar" (ou Enter). A marcação de quem recebe continua a mesma; e-mail inválido ou repetido é avisado
   v2.21 — Removido o lápis de editar e-mail (a pedido; o × e o "Adicionar" continuam). "Pesquisar Escala" agora sempre confere a VPN na hora do toque quando ainda não tem certeza (mostra "Verificando VPN…" por um instante) — antes, se o teste não tivesse terminado, abria direto sem avisar; o teste também se repete a cada 8 s com a aba Assinar aberta. O espaço do aviso de VPN fica sempre reservado, então o cartão não cresce/encolhe. Campos obrigatórios faltando (ao gerar, buscar número, numerador da parte, pesquisar escala e assinar) ficam com borda vermelha, igual ao menu de estação, e a tela rola até o primeiro; a borda some assim que o campo é preenchido
   v2.22 — Ao trocar de aba, as bordas vermelhas de campos faltando também somem (junto com os avisos)
+  v2.29 — Duas mudanças na escala: (1) a coluna "Ausente" deixou de ser usada (não serve pra nada): quem faltou e o parceiro são sempre "o outro policial da escala" (o que não é você); se houver mais de um outro policial, o app avisa e você preenche à mão. (2) Nova conferência antes de gerar o PDF, quando há escala anexada e lida: se o seu RE não estiver na escala, se o RE de quem faltou (ou do parceiro) não constar nela, ou se o ID, a data, a estação ou o horário do relatório forem diferentes dos da escala, o app mostra o que não bate e pergunta se quer gerar mesmo assim (pega escala de outro dia/serviço anexada por engano). Sem escala anexada, nada muda
+  v2.28 — A escala agora também preenche o serviço: ao anexar o PDF, o app lê o ID, a estação, a data e o horário (Data Início/Término) e preenche esses campos na aba Relatório, além do parceiro/de quem faltou. Estação ou horário que não batem com as opções do app ficam pra você escolher (com aviso). Se o serviço da escala for diferente do que já estava preenchido, os números do relatório/parte são limpos (eram do serviço anterior) e o app avisa pra buscar de novo. Anexar a escala do próximo serviço também troca o parceiro/faltoso que o próprio app tinha preenchido antes
+  v2.27 — Aba da escala agora é a primeira: abas viram "1. Escala", "2. Relatório", "3. Enviar", e o app abre na Escala (a escala é a fonte dos dados do parceiro/de quem faltou). Lista do nome de guerra agora mostra só os nomes soltos (ex: Natan, Dionizio, Silva, Masuko); depois de escolher um, ao tocar no campo de novo aparecem os nomes que faltam pra somar um segundo (nome composto), ou é só digitar. Mensagens e subtítulo ajustados à nova ordem
+  v2.26 — Nome de guerra com opções: depois de anexar a escala (e o parceiro vir preenchido com o nome completo), ao tocar no campo "Nome de guerra ou QRA" aparecem as opções montadas a partir do nome dele (só o último nome, só o primeiro, primeiro + último, últimos dois, etc.); um toque escolhe e preenche. Se você começar a digitar, a lista filtra; se digitar algo fora das opções, ela some e você escreve normalmente. Só aparece pro parceiro lido da escala (se você trocar o RE, some)
+  v2.25 — A leitura da escala agora também vale pro "Sem novidades" (padrão): ao anexar o PDF, o app preenche o Parceiro de serviço (graduação, RE e nome) com o outro policial da escala. Como a escala não traz o nome de guerra, o campo recebe o nome completo. Se o outro policial estiver marcado como ausente, avisa e guarda os dados pra quando você escolher Parte ou Falta ao serviço
   v2.24 — Escala lê quem faltou: ao anexar o PDF da escala (Relatório de Presença de Escala) na aba "2. Assinar", o app lê a tabela do PDF e, quando é Parte ou Relatório de falta (Remanejado/Integrado a equipe), preenche sozinho Graduação, RE, Nome completo e "Pertencente ao" de quem faltou (o outro policial da escala, que não é você; se a coluna "Ausente" tiver marcação, usa quem está marcado). Se a escala tiver mais de um outro policial, for imagem escaneada ou o formato não for reconhecido, avisa e deixa preencher à mão. Nunca sobrescreve um RE diferente já digitado. (A v2.23 de parceiros lembrados foi descartada e não faz parte desta versão)
 -->
 <meta charset="UTF-8">
@@ -856,6 +861,37 @@
   }
   .stack > .hint { margin: 0; }
   .stack > .planilha-actions { margin-top: 0; }
+  .sug-wrap { position: relative; }
+  .sug-painel {
+    display: none;
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: calc(100% + 5px);
+    z-index: 20;
+    background: var(--paper-dark);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+    padding: 4px;
+    max-height: 260px;
+    overflow-y: auto;
+  }
+  .sug-painel.aberto { display: block; }
+  .sug-painel.acima { top: auto; bottom: calc(100% + 5px); }
+  .sug-item {
+    padding: 10px;
+    border-radius: 6px;
+    font-family: Georgia, 'Times New Roman', serif;
+    font-size: 15px;
+    color: var(--ink);
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .sug-item:active { background: rgba(34, 230, 160, 0.14); }
+  @media (hover: hover) {
+    .sug-item:hover { background: var(--paper); }
+  }
   .subcard {
     display: grid;
     gap: 14px;
@@ -1396,7 +1432,7 @@
 </div>
 <div class="wrap">
   <header>
-    <span class="version-tag">v2.24</span>
+    <span class="version-tag">v2.29</span>
     <div class="header-brand">
       <img src="data:image/png;base64,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" alt="" class="header-logo">
       <div>
@@ -1404,18 +1440,18 @@
         <h1>Gerador de Relatório</h1>
       </div>
     </div>
-    <p class="sub">Gere o relatório, assine a escala e envie por e-mail em poucos toques.</p>
+    <p class="sub">Anexe a escala, gere o relatório e envie por e-mail em poucos toques.</p>
   </header>
 
   <div class="offline-banner" id="offlineBanner" hidden>Sem conexão com a internet — buscar número, enviar e-mail e outras ações que dependem da rede não vão funcionar até o sinal voltar.</div>
 
   <div class="tabs" role="tablist">
-    <button type="button" class="tab-btn active" id="tabRelatorioBtn" role="tab" aria-selected="true">1. Relatório</button>
-    <button type="button" class="tab-btn" id="tabAssinarBtn" role="tab" aria-selected="false">2. Assinar</button>
+    <button type="button" class="tab-btn active" id="tabAssinarBtn" role="tab" aria-selected="true">1. Escala</button>
+    <button type="button" class="tab-btn" id="tabRelatorioBtn" role="tab" aria-selected="false">2. Relatório</button>
     <button type="button" class="tab-btn" id="tabEnviarBtn" role="tab" aria-selected="false">3. Enviar</button>
   </div>
 
-  <div id="panel-relatorio" class="panel">
+  <div id="panel-relatorio" class="panel" hidden>
   <form id="form">
     <fieldset>
       <legend>Data e horário</legend>
@@ -1678,7 +1714,7 @@
   </form>
   </div>
 
-  <div id="panel-assinar" class="panel" hidden>
+  <div id="panel-assinar" class="panel">
     <fieldset>
       <legend>Buscar escala na intranet</legend>
       <div class="stack">
@@ -2066,6 +2102,14 @@ let tipoDocumento = 'relatorio'; // 'relatorio' | 'parte'
 let situacaoRelatorio = 'compareceu'; // 'compareceu' | 'remanejado' | 'reforco'
 // Dados de quem faltou, lidos do PDF da escala anexada (null = nenhuma escala lida).
 let escalaFaltosoLido = null; // { grad, gradTexto, re, nome, opm }
+// Mesmo policial, mas pro caso "Sem novidades" (parceiro que compareceu).
+let escalaParceiroLido = null;
+// ID, estação, data e horário lidos do cabeçalho da escala.
+let escalaServicoLido = null; // { id, local, estacao, data, turno }
+// Linhas da tabela de policiais da escala anexada (usadas na conferência antes de gerar).
+let escalaLinhasLidas = null;
+// Último RE que o próprio app preencheu em cada grupo (pra poder trocar quando anexar a escala seguinte).
+const reAutopreenchidos = {};
 
 // Decide o que aparece na tela conforme o tipo de documento e a situação:
 // Relatório+compareceu = parceiro compareceu; Relatório+remanejado/reforço e Parte de Falta = policial que faltou.
@@ -2120,6 +2164,10 @@ function atualizarLayout() {
   // Se já existe uma escala lida e os campos de quem faltou acabaram de aparecer vazios, preenche.
   if (mostrarFalta && escalaFaltosoLido && !document.getElementById('faltaRE').value.trim()) {
     aplicarFaltosoDaEscala();
+  }
+  // E o mesmo vale pro parceiro quando o relatório é "Sem novidades".
+  if (!mostrarFalta && escalaParceiroLido && !document.getElementById('parceiroRE').value.trim()) {
+    aplicarParceiroDaEscala();
   }
 }
 
@@ -2248,6 +2296,10 @@ document.getElementById('situacaoRelatorioSelect').addEventListener('change', fu
 // --- Reset completo do site (chamado no carregamento e toda vez que a aba/atalho é reaberto) ---
 function resetFormState() {
   escalaFaltosoLido = null;
+  escalaParceiroLido = null;
+  escalaServicoLido = null;
+  escalaLinhasLidas = null;
+  Object.keys(reAutopreenchidos).forEach(function(k) { delete reAutopreenchidos[k]; });
   const statusLeitura = document.getElementById('statusLeituraEscala');
   if (statusLeitura) statusLeitura.textContent = '';
   document.querySelectorAll('.invalido').forEach(function(el) { el.classList.remove('invalido'); });
@@ -2332,8 +2384,8 @@ function resetFormState() {
   const revisaoEmailOverlay = document.getElementById('revisaoEmailOverlay');
   if (revisaoEmailOverlay) revisaoEmailOverlay.hidden = true;
 
-  // Sempre volta para a primeira aba
-  if (typeof showTab === 'function') showTab('relatorio');
+  // Sempre volta para a primeira aba (Escala)
+  if (typeof showTab === 'function') showTab('assinar');
 }
 
 // --- Abas ---
@@ -2910,20 +2962,25 @@ function semAcento(texto) {
   return (texto || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '');
 }
 
+// Agrupa os itens de uma página em linhas (mesmo y, com pequena tolerância), de cima pra baixo.
+function agruparLinhasDaPagina(itens) {
+  const ordenados = itens.slice().sort(function(a, b) { return b.y - a.y || a.x - b.x; });
+  const linhas = [];
+  ordenados.forEach(function(it) {
+    const ultima = linhas[linhas.length - 1];
+    if (ultima && Math.abs(ultima.y - it.y) <= 2.5) ultima.itens.push(it);
+    else linhas.push({ y: it.y, itens: [it] });
+  });
+  linhas.forEach(function(l) { l.itens.sort(function(a, b) { return a.x - b.x; }); });
+  return linhas;
+}
+
 // Monta a tabela de policiais a partir dos itens de texto das páginas. Devolve null se não achar o cabeçalho.
 function lerTabelaDaEscala(paginas) {
   const linhasDaTabela = [];
   let achouCabecalho = false;
   paginas.forEach(function(itens) {
-    // agrupa por linha (mesmo y, com pequena tolerância), de cima pra baixo
-    const ordenados = itens.slice().sort(function(a, b) { return b.y - a.y || a.x - b.x; });
-    const linhas = [];
-    ordenados.forEach(function(it) {
-      const ultima = linhas[linhas.length - 1];
-      if (ultima && Math.abs(ultima.y - it.y) <= 2.5) ultima.itens.push(it);
-      else linhas.push({ y: it.y, itens: [it] });
-    });
-    linhas.forEach(function(l) { l.itens.sort(function(a, b) { return a.x - b.x; }); });
+    const linhas = agruparLinhasDaPagina(itens);
 
     const idxCab = linhas.findIndex(function(l) {
       const textos = l.itens.map(function(it) { return it.str; });
@@ -2992,56 +3049,166 @@ function graduacaoDaEscala(texto) {
   return null;
 }
 
-// Decide quem faltou: tira você (pelo RE) da lista; se alguém estiver marcado em "Ausente",
-// vale quem está marcado; senão, vale o outro policial da escala.
+// --- Cabeçalho da escala: ID, estação, data e horário do serviço ---
+function chaveEstacao(texto) {
+  return semAcento(texto).toUpperCase().replace(/^METRO\s+/, '').replace(/[^A-Z0-9]/g, '');
+}
+function estacaoDaEscala(local) {
+  const k = chaveEstacao(local);
+  if (!k) return null;
+  const achada = STATIONS.find(function(st) { return chaveEstacao(st.name) === k; });
+  return achada ? achada.name : null;
+}
+
+function lerCabecalhoDaEscala(paginas) {
+  if (!paginas.length) return null;
+  const textos = agruparLinhasDaPagina(paginas[0]).map(function(l) {
+    return l.itens.map(function(it) { return it.str; }).join(' ');
+  });
+  let id = null, local = null, ini = null, fim = null;
+  textos.forEach(function(t) {
+    let m;
+    if (!id && (m = t.match(/(?:^|\s)ID:\s*(\d+)/))) id = m[1];
+    if (!local && (m = t.match(/(?:^|\s)Local:\s*(.+?)(?=\s+(?:AISP:|Tipo\b|Observa)|$)/))) local = m[1].trim();
+    if (!ini && (m = t.match(/Data In[ií]cio:\s*(\d{2})\/(\d{2})\/(\d{4})\s+(\d{1,2}):(\d{2})/))) {
+      ini = { d: m[1], mes: m[2], a: m[3], h: m[4], min: m[5] };
+    }
+    if (!fim && (m = t.match(/Data T[eé]rmino:\s*(\d{2})\/(\d{2})\/(\d{4})\s+(\d{1,2}):(\d{2})/))) {
+      fim = { h: m[4], min: m[5] };
+    }
+  });
+  if (!id && !local && !ini) return null;
+  const pad2 = function(n) { return String(n).padStart(2, '0'); };
+  return {
+    id: id,
+    local: local,
+    estacao: local ? estacaoDaEscala(local) : null,
+    data: ini ? ini.a + '-' + ini.mes + '-' + ini.d : null,
+    turno: ini && fim ? pad2(ini.h) + ':' + ini.min + '-' + pad2(fim.h) + ':' + fim.min : null,
+  };
+}
+
+// Preenche ID, estação, data e horário. Devolve um texto curto do que foi feito.
+function aplicarServicoDaEscala() {
+  const sv = escalaServicoLido;
+  if (!sv) return '';
+  const idEl = document.getElementById('idServico');
+  const estEl = document.getElementById('estacao');
+  const dataEl = document.getElementById('data');
+  const turnoEl = document.getElementById('turno');
+  const idAntes = idEl.value.trim();
+  const estAntes = estEl.value;
+  const feitos = [];
+  const avisos = [];
+
+  const mudouServico = (idAntes && sv.id && idAntes !== sv.id) || (estAntes && sv.estacao && estAntes !== sv.estacao);
+  let limpouNumeros = false;
+  if (mudouServico) {
+    ['numDoc', 'numeroParte'].forEach(function(campo) {
+      const el = document.getElementById(campo);
+      if (el && el.value) { el.value = ''; limpouNumeros = true; }
+    });
+  }
+
+  if (sv.id) { idEl.value = sv.id; feitos.push('ID ' + sv.id); idEl.classList.remove('invalido'); }
+  if (sv.estacao) {
+    estEl.value = sv.estacao;
+    estEl.classList.remove('invalido');
+    const obj = STATIONS.find(function(st) { return st.name === sv.estacao; });
+    feitos.push(obj ? obj.title : sv.estacao);
+  } else if (sv.local) {
+    avisos.push('a estação "' + sv.local + '" não é uma das opções do app: escolha na mão');
+  }
+  if (sv.data) {
+    dataEl.value = sv.data;
+    dataEl.classList.remove('invalido');
+    updateAnoSuffix();
+    feitos.push(sv.data.split('-').reverse().join('/'));
+  }
+  if (sv.turno) {
+    const existe = Array.prototype.some.call(turnoEl.options, function(o) { return o.value === sv.turno; });
+    if (existe) {
+      turnoEl.value = sv.turno;
+      feitos.push(sv.turno.replace('-', ' às '));
+    } else {
+      avisos.push('o horário ' + sv.turno.replace('-', ' às ') + ' não é um dos turnos do app: escolha na mão');
+    }
+  }
+
+  let texto = feitos.length ? 'Serviço preenchido na aba Relatório: ' + feitos.join(', ') + '.' : '';
+  if (limpouNumeros) texto += ' O número do relatório/parte foi limpo porque o serviço mudou: busque de novo.';
+  if (avisos.length) texto += ' Atenção: ' + avisos.join('; ') + '.';
+  return texto.trim();
+}
+
+function dadosDoPolicialDaEscala(l) {
+  const re = mascararRE(l.re);
+  if (!reCompleto(re)) return null;
+  return {
+    grad: graduacaoDaEscala(l.grad),
+    gradTexto: l.grad.trim(),
+    re: re,
+    nome: titleCaseNome(mascararNome(l.nome.trim())).replace(/\s+/g, ' ').trim(),
+    opm: l.opm.replace(/\s+/g, ' ').trim(),
+  };
+}
+
+// Decide quem faltou: tira você (pelo RE) da lista; sobra o outro policial da escala.
+// (A coluna "Ausente" da escala não é usada.)
 // Devolve { ok: true, faltoso } ou { ok: false, motivo: 'nenhum' | 'varios', quantos }.
 function escolherFaltosoDaEscala(linhas) {
   const outros = linhas.filter(function(l) { return l.re.trim() !== MEU_RE; });
-  const marcados = outros.filter(function(l) { return l.ausente.trim() !== ''; });
-  const candidatos = marcados.length ? marcados : outros;
-  if (candidatos.length === 0) return { ok: false, motivo: 'nenhum' };
-  if (candidatos.length > 1) return { ok: false, motivo: 'varios', quantos: candidatos.length };
-  const l = candidatos[0];
-  const re = mascararRE(l.re);
-  if (!reCompleto(re)) return { ok: false, motivo: 'nenhum' };
-  return {
-    ok: true,
-    faltoso: {
-      grad: graduacaoDaEscala(l.grad),
-      gradTexto: l.grad.trim(),
-      re: re,
-      nome: titleCaseNome(mascararNome(l.nome.trim())).replace(/\s+/g, ' ').trim(),
-      opm: l.opm.replace(/\s+/g, ' ').trim(),
-    },
-  };
+  if (outros.length === 0) return { ok: false, motivo: 'nenhum' };
+  if (outros.length > 1) return { ok: false, motivo: 'varios', quantos: outros.length };
+  const d = dadosDoPolicialDaEscala(outros[0]);
+  return d ? { ok: true, faltoso: d } : { ok: false, motivo: 'nenhum' };
+}
+
+// Decide quem é o parceiro que compareceu: também o outro policial da escala (que não é você).
+// Devolve { ok: true, parceiro } ou { ok: false, motivo: 'nenhum' | 'varios', quantos }.
+function escolherParceiroDaEscala(linhas) {
+  const outros = linhas.filter(function(l) { return l.re.trim() !== MEU_RE; });
+  if (outros.length === 0) return { ok: false, motivo: 'nenhum' };
+  if (outros.length > 1) return { ok: false, motivo: 'varios', quantos: outros.length };
+  const d = dadosDoPolicialDaEscala(outros[0]);
+  return d ? { ok: true, parceiro: d } : { ok: false, motivo: 'nenhum' };
 }
 
 function emModoFalta() {
   return tipoDocumento === 'parte' || situacaoRelatorio !== 'compareceu';
 }
 
-// Preenche os campos de quem faltou com o que foi lido da escala.
+const IDS_FALTOSO = { grad: 'faltaGraduacao', re: 'faltaRE', nome: 'faltaNomeCompleto', opm: 'faltaPertencenteA' };
+const IDS_PARCEIRO = { grad: 'parceiroGraduacao', re: 'parceiroRE', nome: 'parceiroNome', opm: null };
+
+// Preenche um grupo de campos com o que foi lido da escala.
 // Não mexe em nada se já houver outro RE digitado ali.
-function aplicarFaltosoDaEscala() {
-  const f = escalaFaltosoLido;
-  if (!f) return 'nenhum';
-  const gEl = document.getElementById('faltaGraduacao');
-  const reEl = document.getElementById('faltaRE');
-  const nomeEl = document.getElementById('faltaNomeCompleto');
-  const opmEl = document.getElementById('faltaPertencenteA');
+function aplicarPolicialDaEscala(d, ids) {
+  if (!d) return 'nenhum';
+  const gEl = document.getElementById(ids.grad);
+  const reEl = document.getElementById(ids.re);
+  const nomeEl = document.getElementById(ids.nome);
+  const opmEl = ids.opm ? document.getElementById(ids.opm) : null;
   const reAtual = reEl.value.trim();
-  if (reAtual && reAtual !== f.re) return 'conflito';
-  if (f.grad) gEl.value = f.grad;
-  reEl.value = f.re;
-  nomeEl.value = f.nome;
-  opmEl.value = f.opm;
-  [gEl, reEl, nomeEl, opmEl].forEach(function(el) { el.classList.remove('invalido'); });
+  // só recusa se o RE ali foi digitado por você; um RE que o próprio app preencheu antes pode ser trocado
+  if (reAtual && reAtual !== d.re && reAtual !== reAutopreenchidos[ids.re]) return 'conflito';
+  if (d.grad) gEl.value = d.grad;
+  reEl.value = d.re;
+  reAutopreenchidos[ids.re] = d.re;
+  nomeEl.value = d.nome;
+  if (opmEl) opmEl.value = d.opm;
+  [gEl, reEl, nomeEl, opmEl].forEach(function(el) { if (el) el.classList.remove('invalido'); });
   return 'ok';
 }
+function aplicarFaltosoDaEscala() { return aplicarPolicialDaEscala(escalaFaltosoLido, IDS_FALTOSO); }
+function aplicarParceiroDaEscala() { return aplicarPolicialDaEscala(escalaParceiroLido, IDS_PARCEIRO); }
 
 async function lerEscalaAnexada(file) {
   const statusEl = document.getElementById('statusLeituraEscala');
   escalaFaltosoLido = null;
+  escalaParceiroLido = null;
+  escalaServicoLido = null;
+  escalaLinhasLidas = null;
   statusEl.textContent = '';
   setLoading(statusEl, 'Lendo a escala...');
   try {
@@ -3050,41 +3217,193 @@ async function lerEscalaAnexada(file) {
     if (document.getElementById('escalaFile').files[0] !== file) return;
     const temTexto = paginas.some(function(p) { return p.length > 0; });
     if (!temTexto) {
-      statusEl.textContent = 'Não consegui ler o texto deste PDF (parece imagem). Preencha quem faltou à mão.';
+      statusEl.textContent = 'Não consegui ler o texto deste PDF (parece imagem). Preencha à mão.';
       return;
     }
+
+    // 1) o serviço: ID, estação, data e horário
+    escalaServicoLido = lerCabecalhoDaEscala(paginas);
+    const textoServico = aplicarServicoDaEscala();
+
+    // 2) os policiais
     const linhas = lerTabelaDaEscala(paginas);
+    if (!escalaServicoLido && (!linhas || !linhas.length)) {
+      statusEl.textContent = 'Não reconheci este PDF como uma escala. Preencha à mão.';
+      return;
+    }
+    escalaLinhasLidas = linhas && linhas.length ? linhas : null;
+    let textoPoliciais;
     if (!linhas || !linhas.length) {
-      statusEl.textContent = 'Não reconheci a tabela de policiais deste PDF. Preencha quem faltou à mão.';
-      return;
-    }
-    const r = escolherFaltosoDaEscala(linhas);
-    if (!r.ok) {
-      statusEl.textContent = r.motivo === 'varios'
-        ? `A escala tem ${r.quantos} outros policiais e não dá pra saber quem faltou. Preencha à mão.`
-        : 'Não achei na escala outro policial além de você. Preencha quem faltou à mão.';
-      return;
-    }
-    escalaFaltosoLido = r.faltoso;
-    const f = r.faltoso;
-    const quem = `${f.gradTexto ? f.gradTexto + ' ' : ''}${f.nome} (RE ${f.re})`;
-    const avisoGrad = f.grad ? '' : ` A graduação "${f.gradTexto}" não é uma das opções do app: escolha na mão.`;
-    if (emModoFalta()) {
-      const res = aplicarFaltosoDaEscala();
-      if (res === 'ok') {
-        statusEl.textContent = `Escala lida. Preenchi quem faltou na aba 1: ${quem}. Confira.${avisoGrad}`;
-      } else {
-        statusEl.textContent = `Escala lida (${quem}), mas já há outro RE digitado em "quem faltou"; não alterei nada.`;
-      }
+      textoPoliciais = 'Não reconheci a tabela de policiais: preencha o parceiro/quem faltou à mão.';
     } else {
-      statusEl.textContent = `Escala lida (${quem}). Quando você escolher Parte ou Falta ao serviço, os dados entram sozinhos.${avisoGrad}`;
+      const rf = escolherFaltosoDaEscala(linhas);
+      const rp = escolherParceiroDaEscala(linhas);
+      escalaFaltosoLido = rf.ok ? rf.faltoso : null;
+      escalaParceiroLido = rp.ok ? rp.parceiro : null;
+
+      const modoFalta = emModoFalta();
+      const r = modoFalta ? rf : rp;
+      if (!r.ok) {
+        if (r.motivo === 'varios') {
+          textoPoliciais = modoFalta
+            ? `A escala tem ${r.quantos} outros policiais e não dá pra saber quem faltou: preencha à mão.`
+            : `A escala tem ${r.quantos} outros policiais e não dá pra saber qual é o parceiro: preencha à mão.`;
+        } else {
+          textoPoliciais = 'Não achei na escala outro policial além de você: preencha à mão.';
+        }
+      } else {
+        const d = modoFalta ? rf.faltoso : rp.parceiro;
+        const quem = `${d.gradTexto ? d.gradTexto + ' ' : ''}${d.nome} (RE ${d.re})`;
+        const avisoGrad = d.grad ? '' : ` A graduação "${d.gradTexto}" não é uma das opções do app: escolha na mão.`;
+        const res = modoFalta ? aplicarFaltosoDaEscala() : aplicarParceiroDaEscala();
+        if (res === 'ok') {
+          textoPoliciais = modoFalta
+            ? `Quem faltou: ${quem}. Confira.${avisoGrad}`
+            : `Parceiro: ${quem}. Toque em Nome de guerra e escolha o nome (se for composto, toque de novo e some o segundo).${avisoGrad}`;
+        } else {
+          textoPoliciais = `Escala lida (${quem}), mas já há outro RE digitado em "${modoFalta ? 'quem faltou' : 'parceiro'}": não alterei esses campos.`;
+        }
+      }
     }
+    statusEl.textContent = ['Escala lida.', textoServico, textoPoliciais].filter(Boolean).join(' ');
   } catch (err) {
     console.error(err);
     if (document.getElementById('escalaFile').files[0] === file) {
-      statusEl.textContent = 'Não foi possível ler a escala agora (sem internet?). Preencha quem faltou à mão.';
+      statusEl.textContent = 'Não foi possível ler a escala agora (sem internet?). Preencha à mão.';
     }
   }
+}
+
+// --- Nomes pra escolher o nome de guerra (só pro parceiro lido da escala) ---
+// A escala só traz o nome completo. Ao tocar no campo "Nome de guerra ou QRA", mostra os nomes
+// soltos dele (ex: Natan, Dionizio, Silva, Masuko). Escolher um preenche o campo; tocando de novo,
+// aparecem os que faltam pra somar um segundo nome (nome composto). Também dá pra digitar.
+function nomesParaGuerra(nomeCompleto) {
+  const vistos = {};
+  return (nomeCompleto || '').split(/\s+/).filter(function(p) {
+    if (!p || CONECTIVOS_NOME.indexOf(p.toLowerCase()) !== -1) return false;
+    const chave = semAcento(p).toLowerCase();
+    if (vistos[chave]) return false;
+    vistos[chave] = true;
+    return true;
+  });
+}
+
+(function() {
+  const input = document.getElementById('parceiroNome');
+  if (!input) return;
+  const wrap = document.createElement('div');
+  wrap.className = 'sug-wrap';
+  input.parentNode.insertBefore(wrap, input);
+  wrap.appendChild(input);
+  const painel = document.createElement('div');
+  painel.className = 'sug-painel';
+  painel.setAttribute('role', 'listbox');
+  wrap.appendChild(painel);
+  let timerFechar = null;
+
+  function fechar() {
+    painel.classList.remove('aberto', 'acima');
+    painel.innerHTML = '';
+  }
+
+  const norm = function(t) { return semAcento(t).toLowerCase(); };
+
+  // modo 'toque': o que já está no campo conta como palavras prontas (mostra os nomes que faltam);
+  // modo 'digitando': a última palavra é só o começo do nome que você está escrevendo (filtra).
+  function calcular(modo) {
+    const p = escalaParceiroLido;
+    if (!p || document.getElementById('parceiroRE').value.trim() !== p.re) return null;
+    const valor = input.value;
+    let base = [];
+    let parcial = '';
+    if (valor !== p.nome) {
+      base = valor.trim().split(/\s+/).filter(Boolean);
+      if (modo === 'digitando' && base.length && !/\s$/.test(valor)) parcial = base.pop();
+    }
+    const usados = base.map(norm);
+    const q = norm(parcial);
+    const nomes = nomesParaGuerra(p.nome).filter(function(n) {
+      const nn = norm(n);
+      return usados.indexOf(nn) === -1 && (!q || nn.indexOf(q) === 0);
+    });
+    return { base: base, nomes: nomes };
+  }
+
+  function mostrar(modo) {
+    clearTimeout(timerFechar);
+    const r = calcular(modo);
+    painel.innerHTML = '';
+    if (!r || !r.nomes.length) { fechar(); return; }
+    r.nomes.forEach(function(n) {
+      const item = document.createElement('div');
+      item.className = 'sug-item';
+      item.setAttribute('role', 'option');
+      item.textContent = n;
+      item.addEventListener('click', function() {
+        input.value = r.base.concat(n).join(' ');
+        input.classList.remove('invalido');
+        fechar();
+        input.blur();
+      });
+      painel.appendChild(item);
+    });
+    painel.classList.remove('acima');
+    painel.classList.add('aberto');
+    // se não couber embaixo (teclado aberto), mostra acima do campo
+    const vv = window.visualViewport;
+    const limite = vv ? vv.offsetTop + vv.height : window.innerHeight;
+    if (painel.getBoundingClientRect().bottom > limite - 8) painel.classList.add('acima');
+  }
+
+  input.addEventListener('focus', function() {
+    // se o campo ainda tem o nome completo vindo da escala, seleciona tudo pra o que você digitar substituir
+    const p = escalaParceiroLido;
+    if (p && input.value === p.nome) {
+      setTimeout(function() { try { input.select(); } catch (err) { /* sem problema */ } }, 0);
+    }
+    mostrar('toque');
+  });
+  input.addEventListener('input', function() { mostrar('digitando'); });
+  input.addEventListener('blur', function() { timerFechar = setTimeout(fechar, 300); });
+  painel.addEventListener('mousedown', function(e) { e.preventDefault(); });
+  document.addEventListener('fecharTodosSelectsCustom', fechar);
+})();
+
+// --- Conferência com a escala anexada, antes de gerar o PDF ---
+// Devolve a lista de coisas que não batem (vazia se está tudo certo ou se não há escala lida).
+function conferirComEscalaAnexada(ehParte) {
+  const avisos = [];
+  const sv = escalaServicoLido;
+  const linhas = escalaLinhasLidas;
+  if (!sv && !linhas) return avisos;
+  const br = function(iso) { return iso.split('-').reverse().join('/'); };
+  const titulo = function(nome) {
+    const o = STATIONS.find(function(st) { return st.name === nome; });
+    return o ? o.title : nome;
+  };
+  const horario = function(t) { return t.replace('-', ' às '); };
+
+  if (sv) {
+    const id = document.getElementById('idServico').value.trim();
+    if (sv.id && id && id !== sv.id) avisos.push(`ID do relatório (${id}) é diferente do ID da escala (${sv.id})`);
+    const data = document.getElementById('data').value;
+    if (sv.data && data && data !== sv.data) avisos.push(`data do relatório (${br(data)}) é diferente da escala (${br(sv.data)})`);
+    const est = document.getElementById('estacao').value;
+    if (sv.estacao && est && est !== sv.estacao) avisos.push(`estação do relatório (${titulo(est)}) é diferente da escala (${titulo(sv.estacao)})`);
+    const turno = document.getElementById('turno').value;
+    if (sv.turno && turno && turno !== sv.turno) avisos.push(`horário do relatório (${horario(turno)}) é diferente da escala (${horario(sv.turno)})`);
+  }
+  if (linhas && linhas.length) {
+    const res = linhas.map(function(l) { return l.re.trim(); });
+    if (res.indexOf(MEU_RE) === -1) avisos.push(`o seu RE (${MEU_RE}) não está na escala`);
+    const modoFalta = ehParte || situacaoRelatorio !== 'compareceu';
+    const re = document.getElementById(modoFalta ? 'faltaRE' : 'parceiroRE').value.trim();
+    if (re && res.indexOf(re) === -1) {
+      avisos.push(`o RE ${modoFalta ? 'de quem faltou' : 'do parceiro'} (${re}) não consta na escala`);
+    }
+  }
+  return avisos;
 }
 
 function atualizarSeletorArquivoEscala() {
@@ -3112,6 +3431,9 @@ document.getElementById('escalaFile').addEventListener('change', function() {
   } else {
     infoEl.hidden = true;
     escalaFaltosoLido = null;
+    escalaParceiroLido = null;
+    escalaServicoLido = null;
+    escalaLinhasLidas = null;
     document.getElementById('statusLeituraEscala').textContent = '';
   }
 });
@@ -3997,6 +4319,19 @@ document.getElementById('form').addEventListener('submit', async function(e) {
     return;
   }
 
+  // Se há uma escala anexada e lida, confere se ela bate com o que está no formulário.
+  const avisosEscala = conferirComEscalaAnexada(ehParteAgora);
+  if (avisosEscala.length) {
+    const seguir = await confirmarCustom(
+      'A escala anexada não bate com o relatório. Gerar mesmo assim?\n\n' + avisosEscala.join('\n'),
+      { okLabel: 'Gerar mesmo assim', danger: true }
+    );
+    if (!seguir) {
+      statusEl.textContent = '';
+      return;
+    }
+  }
+
   operacaoEmAndamento = true;
   gerarBtn.disabled = true;
   try {
@@ -4132,7 +4467,7 @@ resetFormState();
 // (o iPhone mantém o atalho da tela inicial "suspenso" em vez de recarregar sozinho,
 // então esse é o jeito de avisar que uma atualização está disponível sem precisar
 // remover e adicionar o atalho de novo)
-const CURRENT_VERSION = 'v2.24';
+const CURRENT_VERSION = 'v2.29';
 let operacaoEmAndamento = false;
 
 async function checkForUpdate() {
