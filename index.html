@@ -126,6 +126,7 @@
   v2.20 — Lápis ao lado de cada e-mail salvo nos destinatários: toca nele, corrige o e-mail ali mesmo e toca em "Salvar" (ou Enter). A marcação de quem recebe continua a mesma; e-mail inválido ou repetido é avisado
   v2.21 — Removido o lápis de editar e-mail (a pedido; o × e o "Adicionar" continuam). "Pesquisar Escala" agora sempre confere a VPN na hora do toque quando ainda não tem certeza (mostra "Verificando VPN…" por um instante) — antes, se o teste não tivesse terminado, abria direto sem avisar; o teste também se repete a cada 8 s com a aba Assinar aberta. O espaço do aviso de VPN fica sempre reservado, então o cartão não cresce/encolhe. Campos obrigatórios faltando (ao gerar, buscar número, numerador da parte, pesquisar escala e assinar) ficam com borda vermelha, igual ao menu de estação, e a tela rola até o primeiro; a borda some assim que o campo é preenchido
   v2.22 — Ao trocar de aba, as bordas vermelhas de campos faltando também somem (junto com os avisos)
+  v2.41 — Nome de guerra sem teclado: quando o parceiro veio da escala, tocar no campo abre só o menu (o campo fica "somente leitura" nesse momento), então o teclado do iPhone não aparece — e com ele somem a barra "Preencher Automaticamente", a sugestão de nome e o sobe-e-desce da tela. Pra digitar um nome que não esteja no menu, é só tocar no campo uma segunda vez: aí o teclado abre normalmente (ao sair do campo ele volta ao modo menu). Sem parceiro lido da escala, o campo é um campo de texto comum
   v2.40 — Menu do nome de guerra, três correções: (1) não fecha mais quando você arrasta a tela pra rolar (antes qualquer encostada fora dele fechava; agora só um toque rápido fora fecha, e esse toque também esconde o teclado); (2) abre também ao tocar no campo quando ele já estava com o cursor (antes só abria ao ganhar o foco, então às vezes não abria); (3) cabe sempre na parte visível: a página rola pra revelar o menu e, se mesmo assim não houver espaço (campo perto do fim da tela, teclado aberto), o menu ganha altura menor com rolagem dentro dele, sempre abrindo pra baixo
   v2.39 — Menu do nome de guerra mais suave: fecha com a mesma animação dos outros menus (some aos poucos, em vez de sumir de uma vez) e sem o atraso de antes (fecha na hora ao tocar fora); também fecha ao tocar em qualquer lugar fora dele. A rolagem automática que revela o menu acima do teclado agora é suave (antes era instantânea, o "tranco")
   v2.38 — Menu do nome de guerra: (1) abre sempre pra baixo (não pula mais pra cima quando o campo está com o nome completo); a página rola sozinha pra o menu ficar visível acima do teclado; (2) agora também oferece Da, De, Do, Das e Dos quando fazem parte do nome (pra "Da Silva", "De Oliveira"); (3) escolher um pedaço não fecha mais o menu: o pedaço fica marcado com ✓ (igual aos outros menus do app), dá pra tocar em vários, na ordem que quiser, e tocar de novo num marcado desmarca. O menu fecha ao tocar fora dele. O filtro ao digitar saiu (a lista fica sempre completa)
@@ -881,6 +882,7 @@
   .stack > .hint { margin: 0; }
   .stack > .planilha-actions { margin-top: 0; }
   .sug-wrap { position: relative; }
+  #parceiroNome[readonly] { cursor: pointer; caret-color: transparent; }
   .sug-painel {
     position: absolute;
     left: 0;
@@ -1474,7 +1476,7 @@
 </div>
 <div class="wrap">
   <header>
-    <span class="version-tag">v2.40</span>
+    <span class="version-tag">v2.41</span>
     <div class="header-brand">
       <img src="data:image/png;base64,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" alt="" class="header-logo">
       <div>
@@ -3345,6 +3347,9 @@ function nomesParaGuerra(nomeCompleto) {
   let timerTocando = null;
   let tocandoMenu = false; // true por um instante quando o toque começou dentro do menu (não fechar nesse caso)
   let nomeCompletoNoFoco = false;
+  let digitando = false;   // true quando você pediu o teclado (segundo toque no campo)
+  let trocandoModo = false;
+  let ultimoAbrirEm = 0;
 
   const norm = function(t) { return semAcento(t).toLowerCase(); };
 
@@ -3371,6 +3376,22 @@ function nomesParaGuerra(nomeCompleto) {
   function pedacosDoCampo(p) {
     if (input.value === p.nome) return [];
     return input.value.trim().split(/\s+/).filter(Boolean);
+  }
+
+  // Com o parceiro lido da escala, o campo fica "somente leitura": tocar abre só o menu, sem o
+  // teclado do iPhone (e sem a barra "Preencher Automaticamente"). Sem parceiro da escala, ou
+  // depois do segundo toque, é um campo de texto normal.
+  function aplicarModoCampo() {
+    input.readOnly = !!parceiroAtual() && !digitando;
+  }
+
+  function ativarDigitacao() {
+    digitando = true;
+    trocandoModo = true;
+    input.readOnly = false;
+    input.blur();
+    input.focus(); // dentro do toque do usuário, então o teclado abre
+    trocandoModo = false;
   }
 
   function desenhar() {
@@ -3441,6 +3462,8 @@ function nomesParaGuerra(nomeCompleto) {
   }
 
   function abrir() {
+    ultimoAbrirEm = Date.now();
+    aplicarModoCampo();
     const p = escalaParceiroLido;
     nomeCompletoNoFoco = !!(p && input.value === p.nome);
     if (desenhar()) {
@@ -3452,8 +3475,14 @@ function nomesParaGuerra(nomeCompleto) {
   input.addEventListener('focus', abrir);
   // Tocar no campo quando ele já estava com o cursor não gera "focus": abre também no toque.
   input.addEventListener('click', function() {
-    if (!painel.classList.contains('aberto')) abrir();
+    if (!painel.classList.contains('aberto')) { abrir(); return; }
+    // segundo toque com o menu já aberto (não o toque que acabou de abri-lo): vira digitação
+    if (!digitando && input.readOnly && Date.now() - ultimoAbrirEm > 500) ativarDigitacao();
   });
+  // Antes de o toque virar foco, garante o modo certo (o iOS decide mostrar o teclado nesse momento).
+  input.addEventListener('pointerdown', function() { if (!digitando) aplicarModoCampo(); });
+  input.addEventListener('touchstart', function() { if (!digitando) aplicarModoCampo(); }, { passive: true });
+  setInterval(function() { if (document.activeElement !== input && !digitando) aplicarModoCampo(); }, 400);
   input.addEventListener('input', function() {
     // se começou a digitar com o nome completo ainda no campo, o que for digitado substitui tudo
     const p = escalaParceiroLido;
@@ -3469,7 +3498,12 @@ function nomesParaGuerra(nomeCompleto) {
     desenhar(); // só atualiza as marcações; a lista fica sempre completa
   });
   // Tocou fora do campo: fecha na hora (sem atraso). Se o toque começou dentro do menu, não fecha.
-  input.addEventListener('blur', function() { if (!tocandoMenu) fechar(); });
+  input.addEventListener('blur', function() {
+    if (trocandoModo || tocandoMenu) return;
+    digitando = false;
+    aplicarModoCampo();
+    fechar();
+  });
   painel.addEventListener('mousedown', function(e) { e.preventDefault(); });
   painel.addEventListener('pointerdown', function() {
     tocandoMenu = true;
@@ -4865,7 +4899,7 @@ iniciarRascunho();
 // (o iPhone mantém o atalho da tela inicial "suspenso" em vez de recarregar sozinho,
 // então esse é o jeito de avisar que uma atualização está disponível sem precisar
 // remover e adicionar o atalho de novo)
-const CURRENT_VERSION = 'v2.40';
+const CURRENT_VERSION = 'v2.41';
 let operacaoEmAndamento = false;
 
 async function checkForUpdate() {
